@@ -1,0 +1,16 @@
+body {
+	background-image: url('/static/img/background.jpg');
+	color: #ffffff;
+	font-family: 'Ubuntu';
+	font-size: 22px;
+	background-color: #1B4D94;
+}
+
+.navbar-nav > li {
+	padding-right:25px;
+}
+
+.navbar {
+	padding-top: 0px;
+	padding-bottom: 0px;
+}

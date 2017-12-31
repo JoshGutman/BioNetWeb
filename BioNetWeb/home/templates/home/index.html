@@ -1,0 +1,59 @@
+{% extends "master.html" %}
+
+{% block content %}
+	<style type="text/css">
+		.container {
+			padding-top: 10px;
+		}
+		.btn {
+			background-color: #505050;
+		}
+	</style>
+
+	<div class="container">
+		<h1 class="display-4" style="border-bottom: 1px solid white;">BioNetWeb</h1>
+		
+		<br>
+		<div style="text-align:center;">
+			<h2>Run BioNetFit in 3 easy steps:</h2>
+			<br>
+			<p>1. Upload .bngl and .exp files</p>
+			<p>2. Generate .conf file</p>
+			<p>3. Run BioNetFit</p>
+			<br>
+			
+			<form method="POST" enctype="multipart/form-data">
+				
+				<label class="btn btn-secondary btn-lg">
+				Upload <input id="bngl" type="file" accept=".bngl" hidden onchange="displayFile(this)">
+				<input type="text" id="bngl-label" value=".bngl file" readonly>
+				</label>
+				
+				<br>
+				
+				<label class="btn btn-secondary btn-lg">
+				Upload <input id="exp" type="file" accept=".exp" hidden onchange="displayFile(this)">
+				<input type="text" id="exp-label" value=".exp file" readonly>
+				</label>
+			
+				<br><br>
+			
+				<input type="submit" value="Submit">
+			
+			</form>
+		</div>
+	</div>
+
+	<script>
+		function displayFile(element) {
+			if (element.id == "bngl") {
+				var newId = "bngl-label";
+			} else {
+				var newId = "exp-label";
+			}
+			
+			let field = document.getElementById(newId);
+			field.value = element.files[0].name;
+		}
+	</script>
+{% endblock %}
