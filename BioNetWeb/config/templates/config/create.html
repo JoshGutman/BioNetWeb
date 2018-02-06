@@ -1,0 +1,296 @@
+{% extends "master.html" %}
+
+{% block content %}
+<style>
+	.input-group-addon {
+		min-width: 150px;
+	}
+	
+	.input-group {
+		padding-bottom: 5px;
+	}
+	
+	span[name="checkbox"] {
+		min-width: 0px;
+	}
+	
+	input[type="checkbox"] {
+		width: 30px;
+		height: 30px;
+	}
+	
+	.h-hover:hover {
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	
+	.preview {
+		background-color: #E8ECEF;
+		border-radius: 5px;
+		font-size: 18px;
+		padding-top: 10px;
+		font-family: monospace;
+		color: #000;
+	}
+	
+	.preview pre {
+		font-size: 18px;
+		font-family: monospace;
+	}
+	
+	.plabel {
+		display: inline-block;
+		padding-top: 20px;
+	}
+</style>
+
+<div class="container-fluid">
+
+	<div class="row">
+
+	
+	
+	<div class="left col-md-4 col-sm-8">
+
+		<h2 id="free-options">Free Options</h2>
+		{% block observables %}
+			{% for o in observables %}
+				{% include "config/free_input.html" with label=o %}
+			{% endfor %}
+		{% endblock %}
+		
+		<br>
+		<br>
+		
+		<h2>General Options</h2>
+		
+		{% include "config/normal_input.html" with label="parallel_count" %}
+		
+		<div class="input-group">
+		<span class="input-group-addon">max_walltime</span>
+		<input class="form-control" id="max-walltime-h" type="text" placeholder="HH">
+		<span class="input-group-addon" style="min-width:0px;">:</span>
+		<input class="form-control" id="max-walltime-m" type="text" placeholder="MM">
+		<span class="input-group-addon" style="min-width:0px;">:</span>
+		<input class="form-control" id="max-walltime-s" type="text" value="00">
+		</div>
+		
+		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-general">Optional parameters</button>
+		<div id="optional-general" class="collapse">
+			{% include "config/normal_input.html" with label="seed" default="" %}
+			{% include "config/normal_input.html" with label="max_retries" default="3" %}
+			{% include "config/bool_input.html" with label="make_plots" checked="" %}
+			{% include "config/bool_input.html" with label="delete_old_files" checked="" %}
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2>Fitting Options</h2>
+		{% include "config/normal_input.html" with label="max_generations" %}
+		{% include "config/normal_input.html" with label="permutations" %}
+		
+		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-fitting">Optional parameters</button>
+		<div id="optional-fitting" class="collapse">
+			
+			{% include "config/normal_input.html" with label="smoothing" default="1" %}
+			{% include "config/normal_input.html" with label="objfunc" default="1" %}
+			{% include "config/normal_input.html" with label="extra_weight" default="0" %}
+			{% include "config/normal_input.html" with label="swap_rate" default="0.5" %}
+			{% include "config/normal_input.html" with label="max_parents" default="" %}
+			{% include "config/normal_input.html" with label="keep_parents" default="0" %}
+			{% include "config/normal_input.html" with label="min_objfunc_value" default="0" %}
+			{% include "config/normal_input.html" with label="max_objfunc_value" default="" %}
+			{% include "config/normal_input.html" with label="first_gen_permutations" default="" %}
+			{% include "config/normal_input.html" with label="log_transform_sim_data" default="" %}
+			{% include "config/bool_input.html" with label="divide_by_init" checked="" %}
+			{% include "config/bool_input.html" with label="stop_when_stalled" checked="checked" %}
+			{% include "config/bool_input.html" with label="standardize_sim_data" checked="" %}
+			{% include "config/bool_input.html" with label="standardize_exp_data" checked="" %}
+			{% include "config/bool_input.html" with label="force_different_parents" checked="checked" %}
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#cluster-options">Cluster Options</h2>
+		<div id="cluster-options" class="collapse">
+			
+			{% include "config/normal_input.html" with label="cluster_command" default="" %}
+			{% include "config/normal_input.html" with label="cluster_software" default="" %}
+			{% include "config/normal_input.html" with label="pe_name" default="" %}
+			{% include "config/normal_input.html" with label="queue_name" default="" %}
+			{% include "config/normal_input.html" with label="account_name" default="" %}
+			{% include "config/normal_input.html" with label="job_sleep" default="1" %}
+			{% include "config/normal_input.html" with label="multisim" default="1" %}
+			{% include "config/bool_input.html" with label="use_cluster" checked="unchecked" %}
+			{% include "config/bool_input.html" with label="save_cluster_output" checked="unchecked" %}
+			{% include "config/bool_input.html" with label="run_job_from_worknode" checked="" %}
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#path-options">Path Options</h2>
+		<div id="path-options" class="collapse">
+			{% include "config/normal_input.html" with label="model" %}
+			{% include "config/normal_input.html" with label="exp_file" %}
+			{% include "config/normal_input.html" with label="output_dir" %}
+			{% include "config/normal_input.html" with label="bng_command" %}
+			{% include "config/normal_input.html" with label="job_name" %}
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#display-options">Display Options</h2>
+		<div id="display-options" class="collapse">
+			{% include "config/normal_input.html" with label="verbosity" %}
+			{% include "config/bool_input.html" with label="ask_create" %}
+			{% include "config/bool_input.html" with label="ask_overwrite" %}
+			{% include "config/bool_input.html" with label="show_welcome_message" %}
+		</div>
+		
+		<br>
+		<br>
+		<br>
+		
+		
+		
+	</div> <!-- left column -->
+	
+	
+	
+	
+	<div class="col-md-2"></div>
+	
+	
+	
+	
+	
+	<div class="col-md-6 col-sm-12">
+	
+		<h2>Live Preview</h2>
+	
+		<div class="preview container-fluid">
+	
+		<pre id="free-options-p">
+
+####################
+### Free Options ###
+####################</pre>
+		
+
+		<pre id="general-options-p">
+
+#######################
+### General Options ###
+#######################</pre>		
+
+		{% include "config/label.html" with label="parallel_count" %}
+		{% include "config/label.html" with label="seed" %}
+		{% include "config/label.html" with label="max_retries" %}
+		{% include "config/label.html" with label="make_plots" %}
+		{% include "config/label.html" with label="delete_old_files" %}
+
+		<pre id="fitting-options-p">
+
+#######################
+### Fitting Options ###
+#######################</pre>		
+
+		{% include "config/label.html" with label="max_generations" %}
+		{% include "config/label.html" with label="permutations" %}
+		{% include "config/label.html" with label="smoothing" %}
+		{% include "config/label.html" with label="objfunc" %}
+		{% include "config/label.html" with label="extra_weight" %}
+		{% include "config/label.html" with label="swap_rate" %}
+		{% include "config/label.html" with label="max_parents" %}
+		{% include "config/label.html" with label="keep_parents" %}
+		{% include "config/label.html" with label="min_objfunc_value" %}
+		{% include "config/label.html" with label="max_objfunc_value" %}
+		{% include "config/label.html" with label="first_gen_permutations" %}
+		{% include "config/label.html" with label="log_transform_sim_data" %}
+		{% include "config/label.html" with label="divide_by_init" %}
+		{% include "config/label.html" with label="stop_when_stalled" %}
+		{% include "config/label.html" with label="standardize_sim_data" %}
+		{% include "config/label.html" with label="standardize_exp_data" %}
+		{% include "config/label.html" with label="force_different_parents" %}
+
+		
+		<pre id="cluster-options-p">
+
+#######################
+### Cluster Options ###
+#######################</pre>	
+
+		{% include "config/label.html" with label="cluster_command" %}
+		{% include "config/label.html" with label="cluster_software" %}
+		{% include "config/label.html" with label="pe_name" %}
+		{% include "config/label.html" with label="queue_name" %}
+		{% include "config/label.html" with label="account_name" %}
+		{% include "config/label.html" with label="job_sleep" %}
+		{% include "config/label.html" with label="multisim" %}
+		{% include "config/label.html" with label="use_cluster" %}
+		{% include "config/label.html" with label="save_cluster_output" %}
+		{% include "config/label.html" with label="run_job_from_worknode" %}
+
+
+		<pre id="path-options-p">
+
+####################
+### Path Options ###
+####################</pre>
+
+		{% include "config/label.html" with label="model" %}
+		{% include "config/label.html" with label="exp_file" %}
+		{% include "config/label.html" with label="output_dir" %}
+		{% include "config/label.html" with label="bng_command" %}
+		{% include "config/label.html" with label="job_name" %}
+
+
+		<pre id="display-options-p">
+
+#######################
+### Display Options ###
+#######################</pre>		
+		
+		{% include "config/label.html" with label="verbosity" %}
+		{% include "config/label.html" with label="ask_create" %}
+		{% include "config/label.html" with label="ask_overwrite" %}
+		{% include "config/label.html" with label="show_welcome_message" %}
+		
+		
+		
+		</div>
+		
+	</div> <!-- right column -->
+	
+	
+	
+	
+	
+	</div> <!-- row -->
+
+</div> <!-- container-fluid -->
+
+
+<script>
+	$(".normal").keyup(function () {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		var inpt = $(this).val();
+		$("#" + newId).html(oldId + "=" + inpt);
+	});
+	
+	$(".bool").change(function () {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		if(this.checked) {
+			$("#" + newId).html(oldId + "=1");
+		} else {
+			$("#" + newId).html(oldId + "=0");
+		}
+	});
+</script>
+{% endblock %}
