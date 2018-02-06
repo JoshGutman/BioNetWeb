@@ -8,6 +8,9 @@
 		.btn {
 			background-color: #505050;
 		}
+		body {
+			background-image: url('/static/img/background.jpg');
+		}
 	</style>
 
 	<div class="container">
@@ -25,20 +28,20 @@
 			<form method="POST" enctype="multipart/form-data">
 				
 				<label class="btn btn-secondary btn-lg">
-				Upload <input id="bngl" type="file" accept=".bngl" hidden onchange="displayFile(this)">
+				Upload <input id="bngl" name="bngl" type="file" accept=".bngl" hidden onchange="displayFile(this)">
 				<input type="text" id="bngl-label" value=".bngl file" readonly>
 				</label>
 				
 				<br>
 				
 				<label class="btn btn-secondary btn-lg">
-				Upload <input id="exp" type="file" accept=".exp" hidden onchange="displayFile(this)">
+				Upload <input id="exp" name="exp" type="file" accept=".exp" hidden onchange="displayFile(this)">
 				<input type="text" id="exp-label" value=".exp file" readonly>
 				</label>
 			
 				<br><br>
 			
-				<input type="submit" value="Submit">
+				<input id="submit-btn" type="submit" value="Submit" disabled>
 			
 			</form>
 		</div>
@@ -46,14 +49,25 @@
 
 	<script>
 		function displayFile(element) {
-			if (element.id == "bngl") {
-				var newId = "bngl-label";
-			} else {
-				var newId = "exp-label";
+		
+			if (element.files.length > 0) {
+				if (element.id == "bngl") {
+					var newId = "bngl-label";
+				} else {
+					var newId = "exp-label";
+				}
+				
+				let field = document.getElementById(newId);
+				field.value = element.files[0].name;
+				
+				if (document.getElementById("bngl").files.length > 0) {
+					document.getElementById("submit-btn").disabled = false;
+				} else {
+					document.getElementById("submit-btn").disabled = true;
+				}
 			}
 			
-			let field = document.getElementById(newId);
-			field.value = element.files[0].name;
 		}
 	</script>
+	
 {% endblock %}

@@ -35,15 +35,16 @@
 
 <body>
 	
+	<div class="nbd">
 	<nav class="navbar navbar-expand navbar-dark bg-dark">
-		<a class="navbar-brand" href="#">
+		<a class="navbar-brand" href="/">
 			<img src="{% static 'img/new_logo2.png' %}" width="150">
 		</a>
 
 		<div class="collapse navbar-collapse" id="navbarsExample02">
 			<ul class="navbar-nav mr-auto">
 				<li class="nav-item active">
-					<a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+					<a class="nav-link" href="/">Home <span class="sr-only">(current)</span></a>
 				</li>
 				<li class="nav-item">
 					<a class="nav-link" href="#">About</a>
@@ -55,6 +56,7 @@
 			<a class="nav-link" href="#">Login/Register</a>
 		</div>
 	</nav>
+	</div>
 	
 	{% block content %}
 	{% endblock %}
