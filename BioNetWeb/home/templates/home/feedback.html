@@ -1,0 +1,65 @@
+{% extends "master.html" %}
+
+{% block content %}
+<style type="text/css">
+    .container {
+        padding-top: 10px;
+    }
+    .btn {
+        background-color: #505050;
+    }
+    body {
+        background-image: url('/static/img/background.jpg');
+    }
+    textarea.form-control{
+        height:100px;
+    }
+    .col-md-10 {
+        padding-left: 25%;
+        padding-right: 25%;
+    }
+</style>
+<body>
+        <section id="contact" class="content-section text-center">
+                <div class="contact-section">
+                    <div class="container">
+                        <h2 class="display-4" style="border-bottom: 1px solid white;">Contact Us</h2>
+                        
+                        <br>
+                        <div style="text-align:center;">
+                            <p>If you have any questions about getting access to the monsoon server, </p>
+                            <p>BioNetWeb or BioNetFit, send us an email below</p>
+                            <br>
+                            
+                            <form method="POST" enctype="multipart/form-data">
+
+                                <div class="col-xs-4">
+                                    <label for="inputName">Name</label>
+                                    <input type="text" class="form-control" id="inputName" placeholder="Jane Doe" width="100">
+                                </div>
+                                
+                                <br>
+
+                                <div class="col-xs-4">
+                                    <label for="inputEmail">Email</label>
+                                    <input type="text" class="form-control" id="inputEmail" placeholder="example@email.com" width="100">
+                                </div>
+                                
+                                <br>
+
+                                <div class="col-xs-4">
+                                    <label for="exampleInputText">Your Message</label>
+                                   <textarea  class="form-control" placeholder="Description"></textarea> 
+                                </div>                                
+                            
+                                <br><br>
+                            
+                                <input id="submit-btn" type="submit" value="Submit" disabled>
+                            
+                            </form>
+                        </div>
+                    </div>
+                </div>
+              </section>
+</body>
+{% endblock %}

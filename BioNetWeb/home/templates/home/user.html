@@ -1,0 +1,80 @@
+{% extends "master.html" %}
+
+{% block content %}
+<style type="text/css">
+    .container {
+        padding-top: 10px;
+    }
+    .btn {
+        background-color: #505050;
+    }
+    body {
+        background-image: url('/static/img/background.jpg');
+    }
+    textarea.form-control{
+        height:100px;
+    }
+    .size-override {
+      font-size: 150% !important;
+    }
+    .panel {
+        border-bottom: 1px solid white;
+    }
+</style>
+<body>
+    <div class="container-fluid">
+
+        <div class="row">
+    
+        
+        
+        <div class="left col-md-4 col-sm-8">
+    
+            <h2 id="free-options">Username</h2>
+            <p>display email on file</p>
+            <p>Option to change userdata</p>
+            <br>
+            <h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h3>
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <p>File Name or Date created</p>
+                    <p>Files included</p>
+                </div>
+            </div>
+            
+                <br>
+            <br>
+            
+            
+            
+        </div> <!-- left column -->
+        
+        
+        
+        
+        <div class="col-md-2"></div>
+        
+        
+        
+        
+        
+        <div class="col-md-6 col-sm-12">
+        
+            <h2>File/Visualization Preview</h2>
+        
+            <div class="preview container-fluid">
+
+            
+            </div>
+            
+        </div> <!-- right column -->
+        
+        
+        
+        
+        
+        </div> <!-- row -->
+    
+    </div> <!-- container-fluid -->
+</body>
+{% endblock %}
