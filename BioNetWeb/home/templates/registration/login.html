@@ -1,0 +1,37 @@
+{% extends "master.html" %}
+
+{% block content %}
+    <style type="text/css">
+        .container {
+            padding-top: 10px;
+        }
+        .btn {
+            background-color: #505050;
+        }
+        body {
+            background-image: url('/static/img/background.jpg');
+        }
+        .col-xs-6l {
+            float: left;
+            padding-right: 20%;
+        }
+        .col-xs-6r {
+            float: left;
+        }
+        .input-group-addon {
+            min-width: 100px;
+        }
+    </style>
+    <body>
+        <div class="container">
+                <div class="col-xs-6l" >
+                    <h2>Login</h2>
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit">Login</button>
+                    </form>
+                </div>
+        </div>
+    </body>
+{% endblock %}
