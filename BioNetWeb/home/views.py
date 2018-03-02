@@ -1,11 +1,18 @@
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
+from django.views.generic.edit import FormView
+
 
 
 # Create your views here.
 def index(request):
+    if request.method == 'POST':
+        bnglFile = request.POST.get('bngl', '')
+        expFile = request.POST.get('exp', '')
+        return render(request, 'file_upload', {'bnglfile': bnglfile, 'expfile': expfile})
+
     return render(request, 'home/index.html')
 
 def about(request):
@@ -43,7 +50,7 @@ def signup(request):
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
-            return redirect('home')
+            return redirect('/')
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})

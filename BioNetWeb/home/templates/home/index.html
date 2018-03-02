@@ -25,7 +25,7 @@
 			<p>3. Run BioNetFit</p>
 			<br>
 			
-			<form method="POST" enctype="multipart/form-data">
+			<form method="POST" enctype="multipart/form-data">{% csrf_token %}
 				
 				<label class="btn btn-secondary btn-lg">
 				Upload <input id="bngl" name="bngl" type="file" accept=".bngl" hidden onchange="displayFile(this)">
@@ -41,7 +41,7 @@
 			
 				<br><br>
 			
-				<input id="submit-btn" type="submit" value="Submit" disabled>
+				<input id="submit-btn" type="submit" value="Submit" >
 			
 			</form>
 		</div>

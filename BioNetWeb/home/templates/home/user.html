@@ -29,10 +29,15 @@
         
         
         <div class="left col-md-4 col-sm-8">
-    
+            {% if user.is_authenticated %}
+				<h2 id="free-options"> {{ request.user.get_username }}</h2>
+			{% else %}
             <h2 id="free-options">Username</h2>
+			{% endif %}
+            
             <p>display email on file</p>
             <p>Option to change userdata</p>
+            <p><a href="{% url 'logout' %}">logout</a></p>
             <br>
             <h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h3>
             <div class="panel panel-default">
