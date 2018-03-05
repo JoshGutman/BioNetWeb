@@ -9,11 +9,21 @@ from django.views.generic.edit import FormView
 # Create your views here.
 def index(request):
     if request.method == 'POST':
-        bnglFile = request.POST.get('bngl', '')
-        expFile = request.POST.get('exp', '')
-        return render(request, 'file_upload', {'bnglfile': bnglfile, 'expfile': expfile})
+        bnglFile = request.FILES.get('bngl', '')
+        expFile = request.FILES.get('exp', '')
+        print(type(bnglFile), bnglFile.file, type(expFile), expFile)
+        observables = get_free_parameters(bnglFile.file)
+        print(observables)
+        return render(request, 'config/create.html', {'observables': observables})
 
     return render(request, 'home/index.html')
+
+def get_free_parameters(contents):
+   out = []
+   for line in contents:
+       if "__FREE__" in line.decode('ascii'):
+           out.append(line.decode('ascii').strip().split()[0])
+   return out
 
 def about(request):
     if request.user.is_authenticated:
@@ -39,8 +49,8 @@ def resources(request):
 def user(request):
     return render(request, 'home/user.html')
 
-def admin(request):
-    return render(request, 'home/admin.html')
+#def admin(request):
+   # return render(request, 'home/admin.html')
 
 def signup(request):
     if request.method == 'POST':
