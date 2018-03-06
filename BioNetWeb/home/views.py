@@ -6,19 +6,25 @@ from django.views.generic.edit import FormView
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
+from . import bnw_paths
+from . import secret_login
+from . import ssh_connection
+
+import html
+import time
+import os
+import io
 
 # Create your views here.
 def index(request):
     if request.method == 'POST':
-        print("1")
         if 'submit_create' in request.POST:
-            print(request.POST)
-            bnglFile = request.FILES.get('bngl', '')
-            expFile = request.FILES.get('exp', '')
-            print(type(bnglFile), bnglFile.file, type(expFile), expFile)
-            observables = get_free_parameters(bnglFile.file)
-            print(observables)
-            return render(request, 'config/create.html', {'observables': observables, 'bnglFile': bnglFile, 'expFiles': expFile})
+            bngl_file = request.FILES.get('bngl', '')
+            exp_file = request.FILES.get('exp', '')
+            observables, bngl = get_free_parameters(bngl_file.file)
+            exp = get_file_contents(exp_file.file)
+            return render(request, 'config/create.html', {'observables': observables, 'bngl': bngl, 'exp': exp})
+
         elif 'download' in request.POST:
             print('1')
             response = HttpResponse(FileWrapper(bnglFile.getvalue(), expFile.getValue()), content_type='application/zip')
@@ -28,17 +34,33 @@ def index(request):
             print('2') 
     return render(request, 'home/index.html')
 
+
+
 def get_free_parameters(contents):
    out = []
+   file = ''
    for line in contents:
+       file += line.decode('ascii')
        if "__FREE__" in line.decode('ascii'):
            out.append(line.decode('ascii').strip().split()[0])
-   return out
+   return out, file
+
+
+
+def get_file_contents(contents):
+    out = ''
+    for line in contents:
+        out += line.decode('ascii')
+    return out
+
+
 
 def about(request):
     if request.user.is_authenticated:
         print(request.user.get_username())
     return render(request, 'home/about.html')
+
+
 
 def login(request):
     if request.method == 'POST':
@@ -50,14 +72,92 @@ def login(request):
                 request.session.set_expiry(86400)
     return render(request, 'home/login.html')
 
+
+
 def feedback(request):
     return render(request, 'home/feedback.html')
+
+
 
 def resources(request):
     return render(request, 'home/resources.html')
 
+
+
 def user(request):
+    if request.method == 'POST':
+        conf = html.unescape(request.POST.get("conf"))
+        bngl = html.unescape(request.POST.get("bngl"))
+        exp = html.unescape(request.POST.get("exp"))
+
+        time_id = str(int(time.time()))
+        user = str(request.user)
+        # /scratch/jng86/bnw/[user]/[unique_time_id]
+        location = os.path.join(bnw_paths.Paths.output, user, time_id).replace("\\", "/")
+        bngl_loc = os.path.join(location, time_id + ".bngl").replace("\\", "/")
+        exp_loc = os.path.join(location, time_id + ".exp").replace("\\", "/")
+        conf_loc = os.path.join(location, time_id + ".conf").replace("\\", "/")
+        job_name = "{}_{}".format(user, time_id)
+
+        user_loc = os.path.join(bnw_paths.Paths.output, user)
+        
+        conf = modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name)
+        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+
+        # Check if user's directory exists
+        stdin, stdout, stderr = ssh.execute("pwd")
+        stdin, stdout, stderr = ssh.execute("[ ! -d {} ] && echo 'DNE'".format(user_loc))
+
+        # User's directory does not exist
+        if stdout:
+            stdin, stdout, stderr = ssh.execute("mkdir {}".format(user_loc))
+
+        
+        # Make time_id directory
+        stdin, stdout, stderr = ssh.execute("mkdir {}".format(location))
+
+        sftp = ssh.ssh.open_sftp()        
+        sftp.putfo(io.StringIO(conf), conf_loc)
+        sftp.putfo(io.StringIO(bngl), bngl_loc)
+        sftp.putfo(io.StringIO(exp), exp_loc)
+        
     return render(request, 'home/user.html')
+
+
+def modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name):
+
+    
+    
+    overwrite_options = {"cluster_command": "", "cluster_software": "BNF2mpi", "pe_name": "", "queue_name": "",
+                         "account_name": "", "job_sleep": "", "multisim": "", "use_cluster": "1", "save_cluster_output": "",
+                         "run_job_from_worknode": "", "delete_old_files": "0", "make_plots": "", "verbosity": "",
+                         "ask_create": "0", "ask_overwrite": "0", "show_welcome_message": "0",
+                         "model": bngl_loc, "exp_file": exp_loc, "output_dir": location, "bng_command": bnw_paths.Paths.bng_command,
+                         "job_name": job_name}
+
+    lines = conf.split("\n")
+    out = []
+    ## Very inefficient
+    for line in lines:
+        overwrite = False
+        for key in overwrite_options:
+            if key in line:
+                overwrite = True
+                if overwrite_options[key]:
+                    out.append("{}={}".format(key, overwrite_options[key]))
+        if not overwrite:
+            out.append(line)
+
+    for key in overwrite_options:
+        for line in out:
+            if key in line:
+                break
+        if overwrite_options[key]:
+            out.append("{}={}".format(key, overwrite_options[key]))
+        
+        
+
+    return "\n".join(out)
 
 #def admin(request):
    # return render(request, 'home/admin.html')
