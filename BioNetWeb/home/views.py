@@ -9,12 +9,18 @@ from django.views.generic.edit import FormView
 # Create your views here.
 def index(request):
     if request.method == 'POST':
-        bnglFile = request.FILES.get('bngl', '')
-        expFile = request.FILES.get('exp', '')
-        print(type(bnglFile), bnglFile.file, type(expFile), expFile)
-        observables = get_free_parameters(bnglFile.file)
-        print(observables)
-        return render(request, 'config/create.html', {'observables': observables})
+        if 'download' in request.POST:
+            print('1')
+        elif 'monsoon' in request.POST:
+            print('2') 
+        else:
+            print(request.POST)
+            bnglFile = request.FILES.get('bngl', '')
+            expFile = request.FILES.get('exp', '')
+            print(type(bnglFile), bnglFile.file, type(expFile), expFile)
+            observables = get_free_parameters(bnglFile.file)
+            print(observables)
+            return render(request, 'config/create.html', {'observables': observables, 'bnglFile': bnglFile, 'expFiles': expFiles})
 
     return render(request, 'home/index.html')
 

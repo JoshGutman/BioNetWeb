@@ -154,9 +154,12 @@
 		<br>
 		<br>
 		<br>
-		
-		
-		
+		<form method="POST" enctype="multipart/form-data">{% csrf_token %}
+		<div id="buttons"style="float: left">
+			<input id="submit-btn-1" type="submit" value="Download" name="download">
+			<input id="submit-btn-2" type="submit" value="Monsoon" name="monsoon">
+		</div>
+		</form>
 	</div> <!-- left column -->
 	
 	
