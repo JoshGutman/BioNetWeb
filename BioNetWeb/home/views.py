@@ -3,25 +3,29 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.views.generic.edit import FormView
-
+from django.http import HttpResponse
+from wsgiref.util import FileWrapper
 
 
 # Create your views here.
 def index(request):
     if request.method == 'POST':
-        if 'download' in request.POST:
-            print('1')
-        elif 'monsoon' in request.POST:
-            print('2') 
-        else:
+        print("1")
+        if 'submit_create' in request.POST:
             print(request.POST)
             bnglFile = request.FILES.get('bngl', '')
             expFile = request.FILES.get('exp', '')
             print(type(bnglFile), bnglFile.file, type(expFile), expFile)
             observables = get_free_parameters(bnglFile.file)
             print(observables)
-            return render(request, 'config/create.html', {'observables': observables, 'bnglFile': bnglFile, 'expFiles': expFiles})
-
+            return render(request, 'config/create.html', {'observables': observables, 'bnglFile': bnglFile, 'expFiles': expFile})
+        elif 'download' in request.POST:
+            print('1')
+            response = HttpResponse(FileWrapper(bnglFile.getvalue(), expFile.getValue()), content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=myfile.zip'
+            return response
+        elif 'monsoon' in request.POST:
+            print('2') 
     return render(request, 'home/index.html')
 
 def get_free_parameters(contents):
