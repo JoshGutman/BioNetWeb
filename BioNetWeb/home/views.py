@@ -38,6 +38,10 @@ def resources(request):
     return render(request, 'home/resources.html')
 
 def user(request):
+
+    ### MONGO DB TEST ###
+    create_structure(request)
+
     return render(request, 'home/user.html')
 
 ###### MONGO DB FUNCTIONALITY #####
@@ -69,6 +73,39 @@ def add_db_user(request):
     }
     users.insert(new_user)
     return new_user
+
+# NEW! (3/6): This is a fucntion designed to
+# test our structure for the database. For
+# each user, we would want:
+#   { "user": username,
+#     "project1": {"input_files": {"fname1": FILE,
+#                                  "fname2": FILE,
+#                                  ... },
+#                 {"output_files": {"fname1": FILE,
+#                                   "fname2": FILE,
+#                                   ... }
+#     ... }
+# "Replaces" add_db_user
+def create_structure(request):
+
+    users = establish_db_connect()
+    username = request.user.username
+
+    new_user = {
+        "user": username,
+        "project1": {"input_files": {"file1":"Test file1",
+                                     "file2":"Test file2"},
+                     "output_files": {"file3":"Test file3",
+                                      "file4":"Test file4"}}
+    }
+    users.insert(new_user)
+
+    display_and_download(request)
+
+    # Access filename of first input
+
+    return new_user
+
 
 # Lets also add 2 files to the db
 # under the specific username
@@ -102,8 +139,8 @@ def display_and_download(request):
                 # Print the file itself
                 print(user[field])
                 # Lets download the mongodb file
-                with open(field, 'a') as file:
-                    file.write(user[field])
+                # with open(field, 'a') as file:
+                #     file.write(user[field])
 
 # Well thats pretty sweet, but can
 # we write from an existing file
