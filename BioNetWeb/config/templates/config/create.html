@@ -1,6 +1,11 @@
 {% extends "master.html" %}
 
 {% block content %}
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  
 <style>
 	.input-group-addon {
 		min-width: 150px;
@@ -154,12 +159,12 @@
 		<br>
 		<br>
 		<br>
-		<form method="POST" enctype="multipart/form-data">{% csrf_token %}
+		<!--<form method="POST" enctype="multipart/form-data">{% csrf_token %}-->
 		<div id="buttons"style="float: left">
-			<input id="submit-btn-1" type="submit" value="Download" name="download">
-			<input id="submit-btn-2" type="submit" value="Monsoon" name="monsoon">
+			<input id="download" type="submit" value="Download" name="download">
+			<input id="monsoon" type="submit" value="Monsoon" name="monsoon">
 		</div>
-		</form>
+		<!--</form>-->
 	</div> <!-- left column -->
 	
 	
@@ -169,7 +174,7 @@
 	
 	
 	
-	
+	<!-----------------------LIVE PREVIEW--------------------------->
 	
 	<div class="col-md-6 col-sm-12">
 	
@@ -182,7 +187,9 @@
 ####################
 ### Free Options ###
 ####################</pre>
-		
+		{% for o in observables %}
+			{% include "config/free_label.html" with label=o %}
+		{% endfor %}
 
 		<pre id="general-options-p">
 
@@ -279,21 +286,98 @@
 
 
 <script>
+
+	// Normal input live preview
 	$(".normal").keyup(function () {
 		var oldId = $(this).attr("id");
 		var newId = oldId + "-p";
 		var inpt = $(this).val();
-		$("#" + newId).html(oldId + "=" + inpt);
+		if (inpt == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html(oldId + "=" + inpt);
+		}
+		
 	});
 	
+	// Bool input live preview
 	$(".bool").change(function () {
 		var oldId = $(this).attr("id");
 		var newId = oldId + "-p";
+		$("#" + newId).css("display", "block");
 		if(this.checked) {
 			$("#" + newId).html(oldId + "=1");
 		} else {
 			$("#" + newId).html(oldId + "=0");
 		}
+	});
+	
+	// Free input live preview
+	$(".free").keyup(function () {
+		var oldId = $(this).attr("id");
+		
+		var splitId = oldId.split("-");
+		
+		if (splitId[1] == "lower") {
+			var lower = $(this).val();
+			var upper = document.getElementById(splitId[0] + "-upper").value;
+		} else {
+			var lower = document.getElementById(splitId[0] + "-lower").value;
+			var upper = $(this).val();
+		}
+				
+		var newId = splitId[0] + "-p";
+		if (lower == "" && upper == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html("loguniform_var=" + splitId[0] + "\t" + lower + "\t" + upper);
+		}
+	});
+	
+	$(function() {
+		$("#monsoon").click(function() {
+			var data = "";
+			var freeFields = document.getElementsByClassName("free");
+			var normalFields = document.getElementsByClassName("normal");
+			var boolFields = document.getElementsByClassName("bool");
+
+			for (var i = 0; i < freeFields.length; i+=2) {
+				var name = freeFields[i].id.split("-")[0];
+				data += "loguniform_var=" + name + "\t" + freeFields[i].value + "\t" + freeFields[i+1].value + "\n";
+			}
+			
+			for (var i = 0; i < normalFields.length; i++) {
+				var parent = document.getElementById(normalFields[i].id + "-p");
+				if (parent.style.display != "none") {
+					data += normalFields[i].id + "=" + normalFields[i].value + "\n"
+				}
+			}
+			
+			for (var i = 0; i < boolFields.length; i++) {
+				var parent = document.getElementById(boolFields[i].id + "-p");
+				if (parent.style.display != "none") {
+					var checked = boolFields[i].checked ? "1" : "0";
+					data += boolFields[i].id + "=" + checked + "\n";
+				}
+			}
+			
+			
+			$.ajax({type: "POST",
+					url: "/user",
+					data: {conf: data,
+						   bngl: `{{ bngl }}`,
+						   exp: `{{ exp }}`,
+						   csrfmiddlewaretoken: '{{ csrf_token }}'},
+					success: function() 
+						{
+							location.href="user"
+						}
+					});
+					
+			
+		});
 	});
 </script>
 {% endblock %}
