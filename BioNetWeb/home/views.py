@@ -21,9 +21,10 @@ def index(request):
         if 'submit_create' in request.POST:
             bngl_file = request.FILES.get('bngl', '')
             exp_file = request.FILES.get('exp', '')
+            print(str(bngl_file))
             observables, bngl = get_free_parameters(bngl_file.file)
             exp = get_file_contents(exp_file.file)
-            return render(request, 'config/create.html', {'observables': observables, 'bngl': bngl, 'exp': exp})
+            return render(request, 'config/create.html', {'observables': observables, 'bngl': bngl, 'exp': exp, 'bngl_name': str(bngl_file) , 'exp_name': str(exp_file)})
 
         elif 'download' in request.POST:
             print('1')
@@ -89,26 +90,35 @@ def user(request):
         conf = html.unescape(request.POST.get("conf"))
         bngl = html.unescape(request.POST.get("bngl"))
         exp = html.unescape(request.POST.get("exp"))
-
+        bngl_name = html.unescape(request.POST.get("bnglName"))
+        exp_name = html.unescape(request.POST.get("expName"))
+        
         time_id = str(int(time.time()))
         user = str(request.user)
         # /scratch/jng86/bnw/[user]/[unique_time_id]
         location = os.path.join(bnw_paths.Paths.output, user, time_id).replace("\\", "/")
-        bngl_loc = os.path.join(location, time_id + ".bngl").replace("\\", "/")
-        exp_loc = os.path.join(location, time_id + ".exp").replace("\\", "/")
+        bngl_loc = os.path.join(location, bngl_name).replace("\\", "/")
+        exp_loc = os.path.join(location, exp_name).replace("\\", "/")
         conf_loc = os.path.join(location, time_id + ".conf").replace("\\", "/")
         job_name = "{}_{}".format(user, time_id)
 
-        user_loc = os.path.join(bnw_paths.Paths.output, user)
+        user_loc = os.path.join(bnw_paths.Paths.output, user).replace("\\", "/")
         
         conf = modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name)
+
+        # TODO walltime, ntasks
+        sbatch = bnw_paths.Paths.make_sbatch(job_name, location, time_id, "12:00:00", "5", conf_loc)
+
+        sbatch_loc = os.path.join(location, time_id + ".sh").replace("\\", "/")
+
+        # Establish SSH connection
         ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
 
         # Check if user's directory exists
         stdin, stdout, stderr = ssh.execute("pwd")
         stdin, stdout, stderr = ssh.execute("[ ! -d {} ] && echo 'DNE'".format(user_loc))
 
-        # User's directory does not exist
+        # User's directory does not exist -- create it
         if stdout:
             stdin, stdout, stderr = ssh.execute("mkdir {}".format(user_loc))
 
@@ -120,13 +130,20 @@ def user(request):
         sftp.putfo(io.StringIO(conf), conf_loc)
         sftp.putfo(io.StringIO(bngl), bngl_loc)
         sftp.putfo(io.StringIO(exp), exp_loc)
+        sftp.putfo(io.StringIO(sbatch), sbatch_loc)
+
+        stdin, stdout, stderr = ssh.execute("sbatch {}".format(sbatch_loc))
+
+
+        job_id = stdout[0].split()[-1]
+        
+
+        ssh.__del__()
         
     return render(request, 'home/user.html')
 
 
 def modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name):
-
-    
     
     overwrite_options = {"cluster_command": "", "cluster_software": "BNF2mpi", "pe_name": "", "queue_name": "",
                          "account_name": "", "job_sleep": "", "multisim": "", "use_cluster": "1", "save_cluster_output": "",
