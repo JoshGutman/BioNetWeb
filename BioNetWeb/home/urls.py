@@ -14,5 +14,5 @@ urlpatterns = [
     path('feedback', views.feedback, name='feedback'),
     path('resources', views.resources, name='resources'),
     path('user', views.user, name='user'),
-    path('admin', views.admin, name='admin'),
+   # path('admin', views.admin, name='admin'),
 ]

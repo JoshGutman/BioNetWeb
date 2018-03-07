@@ -29,9 +29,14 @@
                     <form method="post">
                         {% csrf_token %}
                         {{ form.as_p }}
-                        <button type="submit">Login</button>
+                        <button type="submit" name="login">Login</button>
                     </form>
                 </div>
+        </div>
+        <div class="container">
+            <div class="col-xs-6l" >
+                <a class="nav-link" href="/signup"><button type="button" name="login">Register</button></a>
+            </div>
         </div>
     </body>
 {% endblock %}
