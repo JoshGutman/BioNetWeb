@@ -9,8 +9,7 @@ class Paths:
 
     def make_sbatch(name, output, time_id, walltime, ntasks, conf_loc):
         
-        sbatch = """
-#!/bin/bash
+        sbatch = """#!/bin/bash
 #SBATCH --job-name={}
 #SBATCH --output={}/{}_output.txt
 #SBATCH --time={}
