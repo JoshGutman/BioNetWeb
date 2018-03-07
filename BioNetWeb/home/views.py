@@ -56,8 +56,6 @@ def get_file_contents(contents):
 
 
 def about(request):
-    if request.user.is_authenticated:
-        print(request.user.get_username())
     return render(request, 'home/about.html')
 
 
