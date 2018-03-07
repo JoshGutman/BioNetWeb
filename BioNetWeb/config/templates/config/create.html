@@ -59,6 +59,7 @@
 
 		<h2 id="free-options">Free Options</h2>
 		{% block observables %}
+			{% include "config/mutate_input.html" with label="mutate" %}
 			{% for o in observables %}
 				{% include "config/free_input.html" with label=o %}
 			{% endfor %}
@@ -108,6 +109,34 @@
 			{% include "config/normal_input.html" with label="max_objfunc_value" default="" %}
 			{% include "config/normal_input.html" with label="first_gen_permutations" default="" %}
 			{% include "config/normal_input.html" with label="log_transform_sim_data" default="" %}
+			
+			<!-- Options that aren't in the BioNetFit docs... -->
+			{% include "config/normal_input.html" with label="population_size" default="" %}
+			{% include "config/normal_input.html" with label="fit_type" default="" %}
+			{% include "config/normal_input.html" with label="output_every" default="" %}
+			{% include "config/normal_input.html" with label="num_islands" default="" %}
+			{% include "config/normal_input.html" with label="mutate_type" default="" %}
+			{% include "config/normal_input.html" with label="cr" default="" %}
+			{% include "config/normal_input.html" with label="migration_frequency" default="" %}
+			{% include "config/normal_input.html" with label="num_to_migrate" default="" %}
+			{% include "config/normal_input.html" with label="inertia" default="" %}
+			{% include "config/normal_input.html" with label="cognitive" default="" %}
+			{% include "config/normal_input.html" with label="social" default="" %}
+			{% include "config/normal_input.html" with label="nmin" default="" %}
+			{% include "config/normal_input.html" with label="nmax" default="" %}
+			{% include "config/normal_input.html" with label="inertiaInit" default="" %}
+			{% include "config/normal_input.html" with label="inertiaFinal" default="" %}
+			{% include "config/normal_input.html" with label="abs_tolerance" default="" %}
+			{% include "config/normal_input.html" with label="rel_tolerance" default="" %}
+			{% include "config/normal_input.html" with label="mutate_qpso" default="" %}
+			{% include "config/normal_input.html" with label="topology" default="" %}
+			{% include "config/normal_input.html" with label="pso_type" default="" %}
+			{% include "config/bool_input.html" with label="synchronicity" checked="" %}
+			{% include "config/bool_input.html" with label="enhanced_stop" checked="" %}
+			{% include "config/bool_input.html" with label="enhanced_inertia" checked="" %}
+			{% include "config/bool_input.html" with label="use_pipes" checked="" %}
+			<!-- ------------------------------------------- -->
+			
 			{% include "config/bool_input.html" with label="divide_by_init" checked="" %}
 			{% include "config/bool_input.html" with label="stop_when_stalled" checked="checked" %}
 			{% include "config/bool_input.html" with label="standardize_sim_data" checked="" %}
@@ -187,6 +216,7 @@
 ####################
 ### Free Options ###
 ####################</pre>
+		{% include "config/mutate_label.html" with label="mutate" %}
 		{% for o in observables %}
 			{% include "config/free_label.html" with label=o %}
 		{% endfor %}
@@ -227,6 +257,32 @@
 		{% include "config/label.html" with label="standardize_exp_data" %}
 		{% include "config/label.html" with label="force_different_parents" %}
 
+		<!-- Not in docs -->
+		{% include "config/label.html" with label="population_size" %}
+		{% include "config/label.html" with label="fit_type" %}
+		{% include "config/label.html" with label="synchronicity" %}
+		{% include "config/label.html" with label="output_every" %}
+		{% include "config/label.html" with label="num_islands" %}
+		{% include "config/label.html" with label="mutate_type" %}
+		{% include "config/label.html" with label="cr" %}
+		{% include "config/label.html" with label="migration_frequency" %}
+		{% include "config/label.html" with label="num_to_migrate" %}
+		{% include "config/label.html" with label="inertia" %}
+		{% include "config/label.html" with label="cognitive" %}
+		{% include "config/label.html" with label="social" %}
+		{% include "config/label.html" with label="nmin" %}
+		{% include "config/label.html" with label="nmax" %}
+		{% include "config/label.html" with label="inertiaInit" %}
+		{% include "config/label.html" with label="inertiaFinal" %}
+		{% include "config/label.html" with label="abs_tolerance" %}
+		{% include "config/label.html" with label="rel_tolerance" %}
+		{% include "config/label.html" with label="mutate_qpso" %}
+		{% include "config/label.html" with label="topology" %}
+		{% include "config/label.html" with label="pso_type" %}
+		{% include "config/label.html" with label="enhanced_stop" %}
+		{% include "config/label.html" with label="enhanced_inertia" %}
+		{% include "config/label.html" with label="use_pipes" %}
+		<!-- ----------- -->
 		
 		<pre id="cluster-options-p">
 
@@ -339,13 +395,19 @@
 	$(function() {
 		$("#monsoon").click(function() {
 			var data = "";
+			var mutateFields = document.getElementsByClassName("mutate");
 			var freeFields = document.getElementsByClassName("free");
 			var normalFields = document.getElementsByClassName("normal");
 			var boolFields = document.getElementsByClassName("bool");
 
+			for (var i = 0; i < mutateFields.length; i+=2) {
+				var name = mutateFields[i].id.split("-")[0];
+				data += "mutate=default" + " " + mutateFields[i].value + " " + mutateFields[i+1].value + "\n";
+			}
+			
 			for (var i = 0; i < freeFields.length; i+=2) {
 				var name = freeFields[i].id.split("-")[0];
-				data += "loguniform_var=" + name + "\t" + freeFields[i].value + "\t" + freeFields[i+1].value + "\n";
+				data += "loguniform_var=" + name + " " + freeFields[i].value + " " + freeFields[i+1].value + "\n";
 			}
 			
 			for (var i = 0; i < normalFields.length; i++) {
@@ -369,6 +431,8 @@
 					data: {conf: data,
 						   bngl: `{{ bngl }}`,
 						   exp: `{{ exp }}`,
+						   bnglName: "{{ bngl_name }}",
+						   expName: "{{ exp_name }}",
 						   csrfmiddlewaretoken: '{{ csrf_token }}'},
 					success: function() 
 						{
