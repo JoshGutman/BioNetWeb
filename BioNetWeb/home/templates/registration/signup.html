@@ -24,25 +24,44 @@
     </style>
     <body>
         <div class="container">
-                <div class="col-xs-6r">
-                   <h2>Sign up</h2>
-                      <form method="post">
-                        {% csrf_token %}
-                        {% for field in form %}
-                          <p>
-                            {{ field.label_tag }}<br>
-                            {{ field }}
-                            {% if field.help_text %}
-                              <small style="color: grey">{{ field.help_text }}</small>
-                            {% endif %}
-                            {% for error in field.errors %}
-                              <p style="color: red">{{ error }}</p>
-                            {% endfor %}
-                          </p>
+            <div class="col-xs-6r">
+                <h2>Sign up</h2>
+                    <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <p>
+                        {{ field.label_tag }}<br>
+                        {{ field }}                            
+                        {% for error in field.errors %}
+                            <p style="color: red">{{ error }}</p>
                         {% endfor %}
-                        <button type="submit">Sign up</button>
-                      </form>
-                </div>
+                        </p>
+                    {% endfor %} 
+                    <button type="submit">Sign up</button>
+                    </form>
             </div>
+            <div class="col-xs-6r">
+                <br>
+                <br>
+                    <ul>
+                        <li>Username
+                            <ul>
+                            <li>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</li>
+                            </ul>
+                        </li>
+                        <li>Password</li>
+                            <ul>
+                                <li>Your password can&#39;t be too similar to your other personal information.</li>
+                                <li>Your password must contain at least 8 characters.</li>
+                                <li>Your password can&#39;t be a commonly used password.</li>
+                                <li>Your password can&#39;t be entirely numeric.</li>
+                            </ul>
+                        <li>Password Confirmation</li>
+                            <ul>
+                                <li>Enter the same password as before, for verification.</li>
+                            </ul>
+                    </ul>
+            </div>
+        </div>
     </body>
 {% endblock %}
