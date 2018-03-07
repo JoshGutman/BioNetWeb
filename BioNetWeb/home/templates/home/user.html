@@ -1,6 +1,12 @@
 {% extends "master.html" %}
 
 {% block content %}
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+
 <style type="text/css">
     .container {
         padding-top: 10px;
@@ -15,11 +21,19 @@
         height:100px;
     }
     .size-override {
-      font-size: 150% !important;
+		font-size: 150% !important;
     }
     .panel {
         border-bottom: 1px solid white;
     }
+	
+	.listbox {
+		width: 100%;
+	}
+	
+	.option {
+		font-size: 125%;
+	}
 </style>
 <body>
     <div class="container-fluid">
@@ -30,53 +44,97 @@
         
         <div class="left col-md-4 col-sm-8">
             {% if user.is_authenticated %}
-				<h2 id="free-options"> {{ request.user.get_username }}</h2>
-			{% else %}
-            <h2 id="free-options">Username</h2>
-			{% endif %}
-            <p><a href="{% url 'logout' %}">logout</a></p>
-            <br>
-            <h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h3>
-            <div class="panel panel-default">
-                <div class="panel-body">
-                    <p>File Name or Date created</p>
-                    <p>Files included</p>
-                </div>
-            </div>
-            
-                <br>
-            <br>
-            
-            
-            
-        </div> <!-- left column -->
-        
-        
-        
-        
-        <div class="col-md-2"></div>
-        
-        
-        
-        
-        
-        <div class="col-md-6 col-sm-12">
-        
-            <h2>File/Visualization Preview</h2>
-        
-            <div class="preview container-fluid">
+				<h2> {{ request.user.get_username }}</h2>
+				
+				<p><a href="{% url 'logout' %}">logout</a></p>
+				<br>
+				<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h3>
+				<div class="panel panel-default">
+					<div class="panel-body">
+					
+						<select class="listbox" id="projects" size="3">
+							{% for p in projects %}
+								{% include "home/listbox_option.html" with label=p %}
+							{% endfor %}
+						</select>
+						
 
-            
-            </div>
-            
-        </div> <!-- right column -->
-        
-        
-        
+						
+						<p>Files</p>
+						
+						<select class="listbox" id="files" size="5">
+							{% for f in files %}
+								{% include "home/listbox_option.html" with label=f %}
+							{% endfor %}
+						</select>
+						
+						
+					</div>
+				</div>
+				
+					<br>
+				<br>
+				
+				
+				
+				</div> <!-- left column -->
+				
+				
+				
+				
+				<div class="col-md-2"></div>
+				
+				
+				
+				
+				
+				<div class="col-md-6 col-sm-12">
+				
+					<h2>File/Visualization Preview</h2>
+				
+					<div class="preview container-fluid">
+
+					
+					</div>
+					
+				</div> <!-- right column -->
+				
+				
+			{% else %}
+            <h2>Not logged in.</h2>
+			{% endif %}
+
         
         
         </div> <!-- row -->
     
     </div> <!-- container-fluid -->
 </body>
+
+<script>
+
+	$(function() {
+		$("#projects").change(function() {
+			$.ajax({type: "POST",
+					url: "/user",
+					data: {type: "project",
+							project: $("#projects").val(),
+							csrfmiddlewaretoken: '{{ csrf_token }}'},
+					success: function(response)
+						{
+							var files = response.replace("[", "").replace("]", "").replace(new RegExp("\"", "g"), "").split(", ");
+							for (var i = 0; i < files.length; i++) {
+								$("#files").append($("<option>", {
+									value: files[i],
+									text: files[i],
+									class: "option"
+								}));
+							}
+						}
+			});
+		});
+	});
+
+</script>
+
 {% endblock %}
