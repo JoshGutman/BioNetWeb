@@ -5,6 +5,7 @@ class Paths:
     bng_command = "/scratch/jng86/BioNetFit2_pull1/Simulators/BNG2.pl"
     output = "/scratch/jng86/bnw/"
     monsoon_ssh = "monsoon.hpc.nau.edu"
+    delimiter = "__dot__"    # MongoDB doesn't allow "." in key names
 
 
     def make_sbatch(name, output, time_id, walltime, ntasks, conf_loc):

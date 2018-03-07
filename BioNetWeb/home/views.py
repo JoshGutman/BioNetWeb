@@ -14,16 +14,15 @@ from . import ssh_connection
 
 import html
 import time
+import json
 import os
 import io
 
-# Create your views here.
 def index(request):
     if request.method == 'POST':
         if 'submit_create' in request.POST:
             bngl_file = request.FILES.get('bngl', '')
             exp_file = request.FILES.get('exp', '')
-            print(str(bngl_file))
             observables, bngl = get_free_parameters(bngl_file.file)
             exp = get_file_contents(exp_file.file)
             return render(request, 'config/create.html', {'observables': observables, 'bngl': bngl, 'exp': exp, 'bngl_name': str(bngl_file) , 'exp_name': str(exp_file)})
@@ -37,6 +36,52 @@ def index(request):
             print('2') 
     return render(request, 'home/index.html')
 
+
+def add_user(username):
+    users = establish_db_connect()
+
+    users.insert({'user': str(username),
+             'projects': {}})
+    
+
+def add_project(username, project_name):
+    users = establish_db_connect()
+    
+    key = "projects.{}".format(project_name)
+    structure = {"slurm_id": None, "input_files": {}, "output_files": {}}
+    
+    users.update({'user': username}, {'$set': {key: structure}})
+
+def get_projects(username):
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        return user.get("projects")
+
+def add_input_file(username, project_name, file_name, contents):
+    users = establish_db_connect()
+
+    key = "projects.{}.{}.{}".format(project_name, "input_files", file_name)
+    structure = {"contents": contents}
+
+    users.update({'user': username}, {'$set': {key: structure}})
+
+
+def add_output_file(username, project_name, file_name, contents):
+    users = establish_db_connect()
+
+    key = "projects.{}.{}.{}".format(project_name, "output_files", file_name)
+    structure = {"contents": contents}
+
+    users.update({'user': username}, {'$set': {key: structure}})
+    
+
+def set_slurm_id(username, project_name, slurm_id):
+    users = establish_db_connect()
+
+    key = "projects.{}.{}".format(project_name, "slurm_id")
+    structure = str(slurm_id)
+
+    users.update({'user': username}, {'$set': {key: structure}})
 
 
 def get_free_parameters(contents):
@@ -87,62 +132,88 @@ def resources(request):
 
 def user(request):
     if request.method == 'POST':
-        conf = html.unescape(request.POST.get("conf"))
-        bngl = html.unescape(request.POST.get("bngl"))
-        exp = html.unescape(request.POST.get("exp"))
-        bngl_name = html.unescape(request.POST.get("bnglName"))
-        exp_name = html.unescape(request.POST.get("expName"))
-        
-        time_id = str(int(time.time()))
-        user = str(request.user)
-        # /scratch/jng86/bnw/[user]/[unique_time_id]
-        location = os.path.join(bnw_paths.Paths.output, user, time_id).replace("\\", "/")
-        bngl_loc = os.path.join(location, bngl_name).replace("\\", "/")
-        exp_loc = os.path.join(location, exp_name).replace("\\", "/")
-        conf_loc = os.path.join(location, time_id + ".conf").replace("\\", "/")
-        job_name = "{}_{}".format(user, time_id)
 
-        user_loc = os.path.join(bnw_paths.Paths.output, user).replace("\\", "/")
-        
-        conf = modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name)
+        if "type" in request.POST:
+            if request.POST.get("type") == "project":
+                print(request.POST["project"])
+                projects = get_projects(str(request.user))
+                files = projects[request.POST["project"]]["input_files"]
+                file_names = list(map(lambda x: x.replace(bnw_paths.Paths.delimiter, "."), files))
+                #return render(request, 'home/user.html', {"projects": list(projects.keys()), "files": file_names})
+                return HttpResponse(json.dumps(file_names))
+                
 
-        # TODO walltime, ntasks
-        sbatch = bnw_paths.Paths.make_sbatch(job_name, location, time_id, "12:00:00", "5", conf_loc)
+        else:    
+            # Use seconds past epoch for unique job name for now
+            time_id = str(int(time.time()))
+            
+            conf = html.unescape(request.POST.get("conf"))
+            bngl = html.unescape(request.POST.get("bngl"))
+            exp = html.unescape(request.POST.get("exp"))
+            conf_name = "{}.conf".format(time_id)
+            bngl_name = html.unescape(request.POST.get("bnglName"))
+            exp_name = html.unescape(request.POST.get("expName"))
+            
+            user = str(request.user)
+            # /scratch/jng86/bnw/[user]/[unique_time_id]
+            location = os.path.join(bnw_paths.Paths.output, user, time_id).replace("\\", "/")
+            bngl_loc = os.path.join(location, bngl_name).replace("\\", "/")
+            exp_loc = os.path.join(location, exp_name).replace("\\", "/")
+            conf_loc = os.path.join(location, time_id + ".conf").replace("\\", "/")
+            job_name = "{}_{}".format(user, time_id)
 
-        sbatch_loc = os.path.join(location, time_id + ".sh").replace("\\", "/")
+            user_loc = os.path.join(bnw_paths.Paths.output, user).replace("\\", "/")
+            
+            conf = modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name)
 
-        # Establish SSH connection
-        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+            # TODO walltime, ntasks
+            sbatch = bnw_paths.Paths.make_sbatch(job_name, location, time_id, "12:00:00", "5", conf_loc)
 
-        # Check if user's directory exists
-        stdin, stdout, stderr = ssh.execute("pwd")
-        stdin, stdout, stderr = ssh.execute("[ ! -d {} ] && echo 'DNE'".format(user_loc))
+            sbatch_loc = os.path.join(location, time_id + ".sh").replace("\\", "/")
 
-        # User's directory does not exist -- create it
-        if stdout:
-            stdin, stdout, stderr = ssh.execute("mkdir {}".format(user_loc))
+            # Establish SSH connection
+            ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
 
-        
-        # Make time_id directory
-        stdin, stdout, stderr = ssh.execute("mkdir {}".format(location))
+            # Check if user's directory exists
+            stdin, stdout, stderr = ssh.execute("pwd")
+            stdin, stdout, stderr = ssh.execute("[ ! -d {} ] && echo 'DNE'".format(user_loc))
 
-        sftp = ssh.ssh.open_sftp()        
-        sftp.putfo(io.StringIO(conf), conf_loc)
-        sftp.putfo(io.StringIO(bngl), bngl_loc)
-        sftp.putfo(io.StringIO(exp), exp_loc)
-        sftp.putfo(io.StringIO(sbatch), sbatch_loc)
+            # User's directory does not exist -- create it
+            if stdout:
+                stdin, stdout, stderr = ssh.execute("mkdir {}".format(user_loc))
 
-        stdin, stdout, stderr = ssh.execute("sbatch {}".format(sbatch_loc))
+            
+            # Make time_id directory
+            stdin, stdout, stderr = ssh.execute("mkdir {}".format(location))
 
-        job_id = stdout[0].split()[-1]
-        
-        ssh.__del__()
-        
+            sftp = ssh.ssh.open_sftp()        
+            sftp.putfo(io.StringIO(conf), conf_loc)
+            sftp.putfo(io.StringIO(bngl), bngl_loc)
+            sftp.putfo(io.StringIO(exp), exp_loc)
+            sftp.putfo(io.StringIO(sbatch), sbatch_loc)
+
+            stdin, stdout, stderr = ssh.execute("sbatch {}".format(sbatch_loc))
+
+            job_id = stdout[0].split()[-1]
+
+            # Close SSH and SFTP connections
+            ssh.__del__()
+
+            # Add relevent data to MongoDB
+            add_project(user, time_id)
+            for filename, contents in zip(
+                map(lambda x: x.replace(".", bnw_paths.Paths.delimiter),
+                    [conf_name, bngl_name, exp_name]), [conf, bngl, exp]):
+                add_input_file(user, time_id, filename, contents)
+            set_slurm_id(user, time_id, job_id)
+
+
+
+    if request.user.is_authenticated:
+        projects = get_projects(str(request.user))
+        return render(request, 'home/user.html', {"projects": list(projects.keys())})
     else:
-        ### MONGO DB TEST ###
-        create_structure(request)
-        
-    return render(request, 'home/user.html')
+        return render(request, 'home/user.html')
 
 
 def modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name):
@@ -195,69 +266,6 @@ def establish_db_connect():
     return users
 
 
-# Lets Start by Adding the User to the
-# MongoDB. This accesses the request from
-# user(request) and strips the username.
-def add_db_user(request):
-
-    users = establish_db_connect()
-    username = request.user.username
-
-    new_user = {
-        "user":username
-    }
-    users.insert(new_user)
-    return new_user
-
-# NEW! (3/6): This is a fucntion designed to
-# test our structure for the database. For
-# each user, we would want:
-#   { "user": username,
-#     "project1": {"input_files": {"fname1": FILE,
-#                                  "fname2": FILE,
-#                                  ... },
-#                 {"output_files": {"fname1": FILE,
-#                                   "fname2": FILE,
-#                                   ... }
-#     ... }
-# "Replaces" add_db_user
-def create_structure(request):
-
-    users = establish_db_connect()
-    username = request.user.username
-
-    new_user = {
-        "user": username,
-        "project1": {"input_files": {"file1":"Test file1",
-                                     "file2":"Test file2"},
-                     "output_files": {"file3":"Test file3",
-                                      "file4":"Test file4"}}
-    }
-    users.insert(new_user)
-
-    display_and_download(request)
-
-    # Access filename of first input
-
-    return new_user
-
-
-# Lets also add 2 files to the db
-# under the specific username
-# Fucntion used only for testing
-def add_files(request):
-
-    users = establish_db_connect()
-    username = request.user.username
-
-    users.update({"user":username}, {'$set':{"file1":
-                    "This is a test file, named"
-                    " file1!"}})
-    users.update({"user":username}, {'$set':{"file2":
-                    "This is a test file, named"
-                    " file2!"}})
-
-
 # Now that we have this, lets pull those
 # files out and print them to the console.
 # Fucntion used for testing, can be modified
@@ -303,6 +311,10 @@ def signup(request):
             username = form.cleaned_data.get('username')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
+
+            # Add user to MongoDB
+            add_user(username)
+            
             return redirect('/')
     else:
         form = UserCreationForm()
