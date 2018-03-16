@@ -5,6 +5,8 @@
   src="https://code.jquery.com/jquery-3.3.1.min.js"
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
+  
+ <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
 
 
 <style type="text/css">
@@ -12,18 +14,22 @@
         padding-top: 10px;
     }
     .btn {
-        background-color: #505050;
-    }
-    body {
+
+	}
+    
+	body {
         background-image: url('/static/img/background.jpg');
     }
-    textarea.form-control{
+    
+	textarea.form-control{
         height:100px;
     }
-    .size-override {
+    
+	.size-override {
 		font-size: 150% !important;
     }
-    .panel {
+    
+	.panel {
         border-bottom: 1px solid white;
     }
 	
@@ -33,40 +39,64 @@
 	
 	.option {
 		font-size: 125%;
+		padding-bottom: 5px;
 	}
+	
+	.preview {
+		background-color: #E8ECEF;
+		text-align: center;
+		overflow-y: scroll;
+		height: 100%;
+		max-height: 600px;
+	}
+	
+	.fa {
+		font-size: 220%;
+		color: #585858;
+
+	}
+	
+	.fileitem {
+		margin: 4px;
+		padding: 2px;
+		display: inline-block;
+		max-width: 110px;
+		width: 110px;
+	}
+	
+	.text {
+		color: #000;
+		font-size: 50%;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		text-align: center;
+	}
+	
+	.highlight {
+		background-color: #CCE8FE;
+		border: 1px solid #2b72e5;
+	}
+	
 </style>
+
 <body>
     <div class="container-fluid">
 
-        <div class="row">
-    
+		{% if user.is_authenticated %}
         
-        
-        <div class="left col-md-4 col-sm-8">
-            {% if user.is_authenticated %}
-				<h2> {{ request.user.get_username }}</h2>
-				
-				<p><a href="{% url 'logout' %}">logout</a></p>
-				<br>
-				<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h3>
+			<div class="row">
+			<div class="left col-md-3 col-sm-4">
+				<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h1>
 				<div class="panel panel-default">
 					<div class="panel-body">
 					
-						<select class="listbox" id="projects" size="3">
+						<select class="listbox" id="projects" size="10">
 							{% for p in projects %}
 								{% include "home/listbox_option.html" with label=p %}
 							{% endfor %}
 						</select>
 						
-
-						
-						<p>Files</p>
-						
-						<select class="listbox" id="files" size="5">
-							{% for f in files %}
-								{% include "home/listbox_option.html" with label=f %}
-							{% endfor %}
-						</select>
 						
 						
 					</div>
@@ -80,22 +110,17 @@
 				</div> <!-- left column -->
 				
 				
-				
-				
-				<div class="col-md-2"></div>
-				
+								
 				
 				
 				
 				
-				<div class="col-md-6 col-sm-12">
+				<div class="col-md-9 col-sm-12">
 				
-					<h2>File/Visualization Preview</h2>
+					<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">File/Visualization Preview</h1>
 				
-					<div class="preview container-fluid">
+					<div id="preview" class="preview container">
 
-					
-					</div>
 					
 				</div> <!-- right column -->
 				
@@ -113,23 +138,131 @@
 
 <script>
 
+	
+	var structure = null;
+	
+	var path = [];
+	
+	
+	var fileitem =	'<div class="fileitem file" id="{NAME}">' + 
+						'<i class="btn fa fa-file-text" aria-hidden="true"></i>' + 
+						'<br>' + 
+						'<div class="text">{NAME}</div>' + 
+					'</div>';
+					
+	var folderitem=	'<div class="fileitem folder" id="{NAME}">' + 
+						'<i class="btn fa fa-folder-open-o" aria-hidden="true"></i>' + 
+						'<br>' + 
+						'<div class="text">{NAME}</div>' + 
+					'</div>';
+					
+	var prevFolder=	'<div class="fileitem" id="prev">' + 
+						'<i class="btn fa fa-angle-double-up" aria-hidden="true"></i>' + 
+						'<br>' + 
+						'<div class="text">..</div>' + 
+					'</div>';
+
+					
+	function updatePreview() {
+	
+		var isInner = path.length == 0 ? false : true;
+	
+		var currentLevel = structure;
+		for (var i = 0; i < path.length; i++) {
+			currentLevel = currentLevel[path[i]];
+		}
+				
+		$(".fileitem").remove();
+		
+		if (isInner) {
+			$(".preview").append(prevFolder);
+		}
+		
+		for (var key in currentLevel) {
+
+			// Item is a file
+			if (typeof(currentLevel[key]) == "string") {
+				$(".preview").append(fileitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
+			}
+			
+			// Item is a folder
+			else {
+				$(".preview").append(folderitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
+			}
+		
+		}
+	}
+
 	$(function() {
 		$("#projects").change(function() {
 			$.ajax({type: "POST",
 					url: "/user",
+					dataType: "json",
 					data: {type: "project",
 							project: $("#projects").val(),
 							csrfmiddlewaretoken: '{{ csrf_token }}'},
 					success: function(response)
 						{
-							var files = response.replace("[", "").replace("]", "").replace(new RegExp("\"", "g"), "").split(", ");
-							for (var i = 0; i < files.length; i++) {
-								$("#files").append($("<option>", {
-									value: files[i],
-									text: files[i],
-									class: "option"
-								}));
+							
+							structure = response;
+							
+							updatePreview(); 
+							
+						}
+			});
+		});
+	});
+	
+	
+	$(document).ready(function() {
+		
+		$(document).on("dblclick", ".folder", function() {
+			path.push($(this).attr("id"));
+			updatePreview();
+		});
+	});
+	
+	
+	$(document).ready(function() {
+		
+		$(document).on("dblclick", "#prev", function() {
+			path.pop();
+			updatePreview();
+		});
+		
+	});
+	
+	
+	$(document).ready(function() {
+		
+		$(document).on("click", ".fileitem", function() {
+			$(".highlight").removeClass("highlight");
+			$(this).addClass("highlight");
+		});
+		
+	});
+	
+	
+	$(function() {
+		$("#files").change(function() {
+			$.ajax({type: "POST",
+					url: "/user",
+					dataType: "json",
+					data: {type: "file",
+							project: $("#projects").val(),
+							file: $("#files").val(),
+							csrfmiddlewaretoken: '{{ csrf_token }}'},
+					success: function(response)
+						{
+							var contents = response.replace("[", "").replace("]", "").replace(new RegExp("\"", "g"), "").split(", ");
+							//contents = contents[0].split(", ");
+							console.log(contents.length);
+							$("#preview").append("");
+							for (var i = 0; i < contents.length; i++) {
+								$("#preview").append(contents[i]);
+								$("#preview").append($("<br>"));
 							}
+							
 						}
 			});
 		});

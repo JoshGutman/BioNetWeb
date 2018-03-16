@@ -129,18 +129,81 @@ def resources(request):
     return render(request, 'home/resources.html')
 
 
+def to_mongo_key(filename):
+    return filename.replace(".", bnw_paths.Paths.delimiter)
+
+def from_mongo_key(filename):
+    return filename.replace(bnw_paths.Paths.delimiter, ".")
+
+def to_html_text(text):
+    return text.replace("\t", "    ").replace('""', "").split("\n")
+
+def get_output_structure(user, project_id, output_dir):
+    # output_dir should be /scratch/jng86/bnw/[username]/[time_id]/[username]_[time_id]/
+    
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    stdin, stdout, stderr = ssh.execute("pwd")
+    stdin, stdout, stderr = ssh.execute("find {} -name \* -type f".format(output_dir))
+    ssh.__del__()
+
+    irrelevant_idx = len(output_dir.split("/"))
+    out = {}
+    
+    for file in stdout[1:]:
+        relevant = file.strip().split("/")[irrelevant_idx:]
+        relevant = list(map(lambda x: to_mongo_key(x), relevant))
+        
+        # Add file to structure
+        if len(relevant) == 1:
+            out[relevant[0]] = ""
+        # Add directory and file to structure
+        else:
+            current_level = out
+            for idx, item in enumerate(relevant):
+                if idx == len(relevant)-1:
+                    current_level[item] = ""
+                else:
+                    if item not in current_level:
+                        current_level[item] = {}
+                    current_level = current_level[item]
+    return out
+
+
+# DB method
+def set_output_structure(username, project_name, structure):
+    users = establish_db_connect()
+
+    key = "projects.{}.{}".format(project_name, "output_files")
+
+    users.update({'user': username}, {'$set': {key: structure}})
+
 
 def user(request):
     if request.method == 'POST':
 
         if "type" in request.POST:
             if request.POST.get("type") == "project":
-                print(request.POST["project"])
+                time_id = request.POST["project"]
+                user = str(request.user)
+                projects = get_projects(user)
+                
+                input_files = projects[time_id]["input_files"]
+                input_file_names = list(map(lambda x: from_mongo_key(x), input_files))
+
+                if not projects[time_id]["output_files"]:
+                    output_dir = os.path.join(bnw_paths.Paths.output, user, time_id, "{}_{}".format(user, time_id)).replace("\\", "/")
+                    output_structure = get_output_structure(user, time_id, output_dir)
+                    set_output_structure(user, time_id, output_structure)
+                    
+                                
+                return HttpResponse(json.dumps(projects[time_id]))
+
+            elif request.POST.get("type") == "file":
                 projects = get_projects(str(request.user))
-                files = projects[request.POST["project"]]["input_files"]
-                file_names = list(map(lambda x: x.replace(bnw_paths.Paths.delimiter, "."), files))
-                #return render(request, 'home/user.html', {"projects": list(projects.keys()), "files": file_names})
-                return HttpResponse(json.dumps(file_names))
+                project_name = request.POST["project"]
+                file_name = to_mongo_key(request.POST["file"])
+                file = projects[project_name]["input_files"][file_name]["contents"]
+                return HttpResponse(json.dumps(to_html_text(file)))
                 
 
         else:    
