@@ -45,7 +45,7 @@
 	.preview {
 		background-color: #E8ECEF;
 		text-align: center;
-		overflow-y: scroll;
+		overflow-y: auto;
 		height: 100%;
 		max-height: 600px;
 	}
@@ -76,6 +76,15 @@
 	.highlight {
 		background-color: #CCE8FE;
 		border: 1px solid #2b72e5;
+	}
+	
+	#file-preview {
+		font-family: monospace;
+		white-space: pre-wrap;
+		overflow-x: auto;
+		color: black;
+		text-align: left;
+		font-size: 60%;
 	}
 	
 </style>
@@ -121,6 +130,19 @@
 				
 					<div id="preview" class="preview container">
 
+						<div id="file-system">
+						
+						</div>
+						
+						<div id="file-preview" style="display: none;">
+							<button id="back-btn" type="button" class="btn btn-secondary" style="float:left;"><i class="fa fa-arrow-left" aria-hidden="true" style="font-size:100%;"></i> Back</button>
+							<div id="file-contents" style="padding-top: 15px;">
+							
+							</div>
+						</div>
+					
+					
+					</div>
 					
 				</div> <!-- right column -->
 				
@@ -162,7 +184,8 @@
 						'<div class="text">..</div>' + 
 					'</div>';
 
-					
+				
+	// Update the file system preview
 	function updatePreview() {
 	
 		var isInner = path.length == 0 ? false : true;
@@ -175,24 +198,25 @@
 		$(".fileitem").remove();
 		
 		if (isInner) {
-			$(".preview").append(prevFolder);
+			$("#file-system").append(prevFolder);
 		}
 		
 		for (var key in currentLevel) {
 
 			// Item is a file
 			if (typeof(currentLevel[key]) == "string") {
-				$(".preview").append(fileitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
+				$("#file-system").append(fileitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
 			}
 			
 			// Item is a folder
 			else {
-				$(".preview").append(folderitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
+				$("#file-system").append(folderitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
 			}
 		
 		}
 	}
 
+	// Get project structure
 	$(function() {
 		$("#projects").change(function() {
 			$.ajax({type: "POST",
@@ -204,8 +228,10 @@
 					success: function(response)
 						{
 							
-							structure = response;
+							$("#file-preview").css("display", "none");
+							$("#file-system").css("display", "visible");
 							
+							structure = response;
 							updatePreview(); 
 							
 						}
@@ -213,7 +239,7 @@
 		});
 	});
 	
-	
+	// Go down one directory on whatever folder was clicked
 	$(document).ready(function() {
 		
 		$(document).on("dblclick", ".folder", function() {
@@ -222,7 +248,7 @@
 		});
 	});
 	
-	
+	// Go up one directory in file system
 	$(document).ready(function() {
 		
 		$(document).on("dblclick", "#prev", function() {
@@ -232,7 +258,7 @@
 		
 	});
 	
-	
+	// Highlight file system item on single click
 	$(document).ready(function() {
 		
 		$(document).on("click", ".fileitem", function() {
@@ -242,31 +268,41 @@
 		
 	});
 	
-	
-	$(function() {
-		$("#files").change(function() {
+	// Show file preview
+	$(document).ready(function() {
+		$(document).on("dblclick", ".file", function() {
+		
+			var newPath = path.slice();
+			newPath.push($(this).attr("id"));
+		
 			$.ajax({type: "POST",
 					url: "/user",
 					dataType: "json",
 					data: {type: "file",
 							project: $("#projects").val(),
-							file: $("#files").val(),
+							file: JSON.stringify(newPath),
 							csrfmiddlewaretoken: '{{ csrf_token }}'},
 					success: function(response)
-						{
-							var contents = response.replace("[", "").replace("]", "").replace(new RegExp("\"", "g"), "").split(", ");
-							//contents = contents[0].split(", ");
-							console.log(contents.length);
-							$("#preview").append("");
-							for (var i = 0; i < contents.length; i++) {
-								$("#preview").append(contents[i]);
-								$("#preview").append($("<br>"));
-							}
-							
+						{							
+							$("#file-contents").html(response);
+							$("#file-system").hide();
+							$("#file-preview").show();
 						}
 			});
+		
 		});
 	});
+		
+	// Go from file preview back to file system (back button)
+	$(document).ready(function() {
+		$(document).on("click", "#back-btn", function() {
+			$("#file-preview").hide();
+			$("#file-system").show();
+		});
+	});
+	
+		
+	
 
 </script>
 

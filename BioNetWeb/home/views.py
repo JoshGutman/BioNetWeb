@@ -38,49 +38,61 @@ def index(request):
 
 
 def add_user(username):
+    username = to_mongo_key(username)
     users = establish_db_connect()
-
     users.insert({'user': str(username),
              'projects': {}})
     
 
 def add_project(username, project_name):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
     users = establish_db_connect()
-    
     key = "projects.{}".format(project_name)
     structure = {"slurm_id": None, "input_files": {}, "output_files": {}}
-    
     users.update({'user': username}, {'$set': {key: structure}})
 
 def get_projects(username):
+    username = to_mongo_key(username)
     users = establish_db_connect()
     for user in users.find({"user": username}):
         return user.get("projects")
 
 def add_input_file(username, project_name, file_name, contents):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    file_name = to_mongo_key(file_name)
     users = establish_db_connect()
-
     key = "projects.{}.{}.{}".format(project_name, "input_files", file_name)
-    structure = {"contents": contents}
-
-    users.update({'user': username}, {'$set': {key: structure}})
-
+    users.update({'user': username}, {'$set': {key: contents}})
 
 def add_output_file(username, project_name, file_name, contents):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    file_name = to_mongo_key(file_name)
     users = establish_db_connect()
-
     key = "projects.{}.{}.{}".format(project_name, "output_files", file_name)
-    structure = {"contents": contents}
+    users.update({'user': username}, {'$set': {key: contents}})
 
-    users.update({'user': username}, {'$set': {key: structure}})
+
+def get_file(username, project_name, path):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    path = list(map(lambda x: to_mongo_key(x), path))
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        current_level = user["projects"][project_name]
+        for p in path:
+            current_level = current_level[p]
+        return current_level
     
 
 def set_slurm_id(username, project_name, slurm_id):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
     users = establish_db_connect()
-
     key = "projects.{}.{}".format(project_name, "slurm_id")
     structure = str(slurm_id)
-
     users.update({'user': username}, {'$set': {key: structure}})
 
 
@@ -135,9 +147,6 @@ def to_mongo_key(filename):
 def from_mongo_key(filename):
     return filename.replace(bnw_paths.Paths.delimiter, ".")
 
-def to_html_text(text):
-    return text.replace("\t", "    ").replace('""', "").split("\n")
-
 def get_output_structure(user, project_id, output_dir):
     # output_dir should be /scratch/jng86/bnw/[username]/[time_id]/[username]_[time_id]/
     
@@ -171,11 +180,32 @@ def get_output_structure(user, project_id, output_dir):
 
 # DB method
 def set_output_structure(username, project_name, structure):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(username)
+    current_level = structure
     users = establish_db_connect()
-
     key = "projects.{}.{}".format(project_name, "output_files")
-
     users.update({'user': username}, {'$set': {key: structure}})
+
+
+def get_file_from_monsoon(path, user_loc):
+
+    if "output_files" not in path:
+        return ""
+    
+    start_idx = path.index("output_files") + 1
+
+    path_to_file = "/" + os.path.join(*(user_loc.split("/") + path[start_idx:])).replace("\\", "/")
+
+    # Establish SSH connection
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    sftp = ssh.ssh.open_sftp()
+    contents = io.BytesIO()
+    sftp.getfo(path_to_file, contents)
+    ssh.__del__()
+
+    return contents.getvalue().decode('ascii')
+
 
 
 def user(request):
@@ -194,17 +224,23 @@ def user(request):
                     output_dir = os.path.join(bnw_paths.Paths.output, user, time_id, "{}_{}".format(user, time_id)).replace("\\", "/")
                     output_structure = get_output_structure(user, time_id, output_dir)
                     set_output_structure(user, time_id, output_structure)
-                    
-                                
+                           
                 return HttpResponse(json.dumps(projects[time_id]))
 
+
             elif request.POST.get("type") == "file":
-                projects = get_projects(str(request.user))
-                project_name = request.POST["project"]
-                file_name = to_mongo_key(request.POST["file"])
-                file = projects[project_name]["input_files"][file_name]["contents"]
-                return HttpResponse(json.dumps(to_html_text(file)))
+                path = json.loads(request.POST.get("file"))
+                username = str(request.user)
+                project_name = request.POST.get("project")
+                file_contents = get_file(username, project_name, path)
+
+                # Output file -- get file from Monsoon
+                if not file_contents:
+                    user_loc = os.path.join(bnw_paths.Paths.output, username, project_name, "{}_{}".format(username, project_name)).replace("\\", "/")
+                    file_contents = get_file_from_monsoon(path, user_loc)
+                    add_output_file(username, project_name, path[-1], file_contents)
                 
+                return HttpResponse(json.dumps(file_contents))
 
         else:    
             # Use seconds past epoch for unique job name for now
@@ -249,7 +285,7 @@ def user(request):
             # Make time_id directory
             stdin, stdout, stderr = ssh.execute("mkdir {}".format(location))
 
-            sftp = ssh.ssh.open_sftp()        
+            sftp = ssh.ssh.open_sftp()
             sftp.putfo(io.StringIO(conf), conf_loc)
             sftp.putfo(io.StringIO(bngl), bngl_loc)
             sftp.putfo(io.StringIO(exp), exp_loc)
@@ -313,14 +349,6 @@ def modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name):
     return "\n".join(out)
 
 
-###### MONGO DB FUNCTIONALITY #####
-# Note from Tanner: Hey, so I will label
-# and implement a number of mongo db
-# fucntionalities here.
-
-# First we generate a mongo connection
-# We access the db BioNetFit, and
-# the collection users.
 def establish_db_connect():
 
     client = MongoClient()
@@ -328,40 +356,6 @@ def establish_db_connect():
     users = db.users
     return users
 
-
-# Now that we have this, lets pull those
-# files out and print them to the console.
-# Fucntion used for testing, can be modified
-def display_and_download(request):
-
-    users = establish_db_connect()
-    username = request.user.username
-
-    for user in users.find({"user": username}):
-        for field in user:
-            if field != "user" and field != "_id":
-                # Print the name of the file
-                print(field)
-                # Print the file itself
-                print(user[field])
-                # Lets download the mongodb file
-                # with open(field, 'a') as file:
-                #     file.write(user[field])
-
-# Well thats pretty sweet, but can
-# we write from an existing file
-# to the db? I don't see why not!
-def file_insert(request, filename):
-
-    users = establish_db_connect()
-    username = request.user.username
-
-    # Avoid This, just for testing
-    f = open(filename)
-    text = f.read()
-    users.update({"user": username}, {'$set': {filename: text}})
-
-### END DB TESTING FUNCTIONS ###
 
 def admin(request):
     return render(request, 'home/admin.html')
