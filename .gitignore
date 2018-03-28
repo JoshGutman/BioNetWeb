@@ -1,3 +1,4 @@
 BioNetWeb/BioNetWeb/settings_secret.py
 BioNetWeb/home/secret_login.py
 *.pyc
+*.sqlite3
