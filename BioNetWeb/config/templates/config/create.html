@@ -20,9 +20,9 @@
 	    padding: 5px 5px;
 	    position: absolute;
     	z-index: 100;
-    	top: -15%;
+    	top: 115%;
     	left: 50%;
-    	margin-left: -60px;
+    	margin-left: -20px;
     	opacity: 0;
     	transition: opacity 0.3s;
 		font-size: 70%;
@@ -113,7 +113,7 @@
 		<div id="optional-general" class="collapse">
 			{% include "config/normal_input.html" with label="seed" default="" description="Seed for BioNetFit's random number generator.  Comment this option out in order to use a different seed every time. Note: This seed only applies to BioNetFit's random number generator. It does not affect NFsim or BioNetGen. To give NFsim a seed, set seed=### in your simulation command or .rnf file. Default is no user-specified seed (i.e.,the seed is determined automatically)." %}
 			{% include "config/normal_input.html" with label="max_retries" default="3" description="Sometimes a generation must be re-run because there were too many simulations which did not finish successfully.  This often happens because they hit the specified maximum walltime. max_retries is the number of times a generation will be run before BioNetFit gives up. Default is 3." %}
-			{% include "config/bool_input.html" with label="make_plots" checked="Whether or not BioNetFit will output plots when results are ready. Default is 0." %}
+			{% include "config/bool_input.html" with label="make_plots" checked="" description="Whether or not BioNetFit will output plots when results are ready. Default is 0." %}
 			{% include "config/bool_input.html" with label="delete_old_files" checked="" description="BioNetFit results can use a lot of disk space.  Enabling this option will delete unnecessary files (.net, .bngl, .xml, .cdat, etc) as a run progresses. We note that if this option is turned on, BioNetFit may not be able to supply you with a model or .net file containing best-fit parameters at the end of the fitting run. " %}
 		</div>
 		
@@ -139,30 +139,30 @@
 			{% include "config/normal_input.html" with label="log_transform_sim_data" default="" description="If this option is set to an integer value, all simulation output will be log transformed using the specified value as the transformation base. This transformation takes place prior to cost function evaluation." %}
 			
 			<!-- Options that aren't in the BioNetFit docs... -->
-			{% include "config/normal_input.html" with label="population_size" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="fit_type" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="output_every" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="num_islands" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="mutate_type" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="cr" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="migration_frequency" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="num_to_migrate" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="inertia" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="cognitive" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="social" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="nmin" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="nmax" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="inertiaInit" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="inertiaFinal" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="abs_tolerance" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="rel_tolerance" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="mutate_qpso" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="topology" default="" description="There is no help information on this currently" %}
-			{% include "config/normal_input.html" with label="pso_type" default="" description="There is no help information on this currently" %}
-			{% include "config/bool_input.html" with label="synchronicity" checked="" description="There is no help information on this currently" %}
-			{% include "config/bool_input.html" with label="enhanced_stop" checked="" description="There is no help information on this currently" %}
-			{% include "config/bool_input.html" with label="enhanced_inertia" checked="" description="There is no help information on this currently" %}
-			{% include "config/bool_input.html" with label="use_pipes" checked="" description="There is no help information on this currently" %}
+			{% include "config/normal_input.html" with label="population_size" default="" description="Should be set to numberof CPU cores in cluster minus 1" %}
+			{% include "config/normal_input.html" with label="fit_type" default="" description="Here ga is genetic algorithm, de is differential evolution, sa is simulated annealing, pso is particle swarm" %}
+			{% include "config/normal_input.html" with label="output_every" default="" description="In an asynchronous fit, output a run summary every n simulations" %}
+			{% include "config/normal_input.html" with label="num_islands" default="" description="In Differential Evolution (de), the number of islands" %}
+			{% include "config/normal_input.html" with label="mutate_type" default="" description="In (differential evolution) DE and (simulated annealing) SA, the mutation type, such as [4]" %}
+			{% include "config/normal_input.html" with label="cr" default="" description="In (differential evolution) DE and (simulated annealing) SA, the crossover rate" %}
+			{% include "config/normal_input.html" with label="migration_frequency" default="" description="In (differential evolution) DE, how often particles migrate between islands" %}
+			{% include "config/normal_input.html" with label="num_to_migrate" default="" description="In (differential evolution) DE, how many points to migrate during crossover" %}
+			{% include "config/normal_input.html" with label="inertia" default="" description="In (particle swarm) PSO, the inertia" %}
+			{% include "config/normal_input.html" with label="cognitive" default="" description="In (particle swarm) PSO, the cognitive factor" %}
+			{% include "config/normal_input.html" with label="social" default="" description="In PSO, the social factor" %}
+			{% include "config/normal_input.html" with label="nmin" default="" description="[nmax is 20, thus nmin is 80]?" %}
+			{% include "config/normal_input.html" with label="nmax" default="" description="[nmax is 20, thus nmin is 80]?" %}
+			{% include "config/normal_input.html" with label="inertiaInit" default="" description="In enhanced inertia, the initial inertia [i.e. is 1]" %}
+			{% include "config/normal_input.html" with label="inertiaFinal" default="" description="In enhanced inertia, the final inertia [i.e. is 0.1]" %}
+			{% include "config/normal_input.html" with label="abs_tolerance" default="" description="Tolerances for enhanced (particle swarm) PSO stop [i.e. 10e-4]" %}
+			{% include "config/normal_input.html" with label="rel_tolerance" default="" description="Tolerances for enhanced (particle swarm) PSO stop [i.e. 10e-4]" %}
+			{% include "config/normal_input.html" with label="mutate_qpso" default="" description="Whether or not to enable mutations in QPSO" %}
+			{% include "config/normal_input.html" with label="topology" default=""  description="Swarm tolopogy in particle swarm or island migration topology in differential evolution can be either ring or toroidal or star or fullyconnected or mesh or tree" %}
+			{% include "config/normal_input.html" with label="pso_type" default="" description="PSO (particle swarm) variant, can be bbpso, bbpsoexp, pso (normal pso), qpso (quantum behaved particle swarm)" %}
+			{% include "config/bool_input.html" with label="synchronicity" checked="" description="1/0 is synchronous/asynchronous" %}
+			{% include "config/bool_input.html" with label="enhanced_stop" checked="" description="Whether or not to use enhanced stop criteria in PSO (not sure if this works well)" %}
+			{% include "config/bool_input.html" with label="enhanced_inertia" checked="" description="Whether or not to use enhanced inertia in PSO" %}
+			{% include "config/bool_input.html" with label="use_pipes" checked="" description="checked to run in windows, pipes" %}
 			<!-- ------------------------------------------- -->
 			
 			{% include "config/bool_input.html" with label="divide_by_init" checked="" description="This option instructs BioNetFit, before cost function evaluation, to divide each model output by the first listed value of the output in the .gdat (or .scan) file, i.e., by the top numerical value in the .gdat (or .scan) file. This feature is useful when the first value listed is, for example, the basal steady-state value and the experimental data being used in fitting consists of fold-change measurements made relative to the basal steady state." %}
