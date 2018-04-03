@@ -74,6 +74,50 @@
 		padding-top: 20px;
 	}
 
+	.preset_list {
+     list-style-type:none;
+     margin:25px 0 0 0;
+     padding:0;
+}
+
+.preset_list li {
+     float:left;
+     margin:0 5px 0 0;
+
+    width:50px;
+    height:40px;
+    position:relative;
+}
+
+.preset_list label, .preset_list input {
+    display:block;
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+}
+
+.preset_list input[type="radio"] {
+    opacity:0.01;
+    z-index:100;
+}
+
+.preset_list input[type="radio"]:checked + label,
+.Checked + label {
+    background:blue;
+}
+
+.preset_list label {
+     padding:5px;
+     border:1px solid #CCC; 
+     cursor:pointer;
+    z-index:90;
+}
+
+.preset_list label:hover {
+     background:#DDD;
+}
 </style>
 
 <div class="container-fluid">
@@ -115,6 +159,7 @@
 			{% include "config/normal_input.html" with label="max_retries" default="3" description="Sometimes a generation must be re-run because there were too many simulations which did not finish successfully.  This often happens because they hit the specified maximum walltime. max_retries is the number of times a generation will be run before BioNetFit gives up. Default is 3." %}
 			{% include "config/bool_input.html" with label="make_plots" checked="" description="Whether or not BioNetFit will output plots when results are ready. Default is 0." %}
 			{% include "config/bool_input.html" with label="delete_old_files" checked="" description="BioNetFit results can use a lot of disk space.  Enabling this option will delete unnecessary files (.net, .bngl, .xml, .cdat, etc) as a run progresses. We note that if this option is turned on, BioNetFit may not be able to supply you with a model or .net file containing best-fit parameters at the end of the fitting run. " %}
+		    {% include "config/preset_input.html" with label="test_preset"  description="Test" first="1" second="2" third="3" %}
 		</div>
 		
 		<br>
@@ -387,6 +432,18 @@
 	
 	// Bool input live preview
 	$(".bool").change(function () {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		$("#" + newId).css("display", "block");
+		if(this.checked) {
+			$("#" + newId).html(oldId + "=1");
+		} else {
+			$("#" + newId).html(oldId + "=0");
+		}
+	});
+
+	// Preset input live preview
+	$(".preset").change(function () {
 		var oldId = $(this).attr("id");
 		var newId = oldId + "-p";
 		$("#" + newId).css("display", "block");

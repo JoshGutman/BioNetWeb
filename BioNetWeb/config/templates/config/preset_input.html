@@ -1,0 +1,21 @@
+<div class="input-group">
+	<span class="input-group-addon">{{ label }}</span>
+	<span class="tooltiptext">{{ description  }}</span>
+	<span class="input-group-addon" name="radio">
+        <ul class="preset_list">
+            <li>
+                <input type="radio" id="{{ first }}" name="{{ label }}" />
+                <label for="{{ first }}">{{ first }}</label>
+            </li>
+            <li>
+                <input type="radio" id="{{ second }}" name="{{ label }}" />
+                <label for="{{ second }}">{{ second }}</label>
+            </li>
+            <li>
+                <input type="radio" id="{{ third }}" name="{{ label }}" checked="checked" />
+                <label for="{{ third }}">{{ third }}</label>
+            </li>
+        </ul>
+	</span>
+	
+</div>
