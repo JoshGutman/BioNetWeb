@@ -19,6 +19,71 @@
         padding-right: 25%;
     }
 </style>
+
+<script>
+$(function()
+{
+    function after_form_submitted(data)
+    {
+        if(data.result == 'success')
+        {
+            $('form#reused_form').hide();
+            $('#success_message').show();
+            $('#error_message').hide();
+        }
+        else
+        {
+            $('#error_message').append('<ul></ul>');
+
+            jQuery.each(data.errors,function(key,val)
+            {
+                $('#error_message ul').append('<li>'+key+':'+val+'</li>');
+            });
+            $('#success_message').hide();
+            $('#error_message').show();
+
+            //reverse the response on the button
+            $('button[type="button"]', $form).each(function()
+            {
+                $btn = $(this);
+                label = $btn.prop('orig_label');
+                if(label)
+                {
+                    $btn.prop('type','submit' );
+                    $btn.text(label);
+                    $btn.prop('orig_label','');
+                }
+            });
+
+        }//else
+    }
+
+	$('#reused_form').submit(function(e)
+      {
+        e.preventDefault();
+
+        $form = $(this);
+        //show some response on the button
+        $('button[type="submit"]', $form).each(function()
+        {
+            $btn = $(this);
+            $btn.prop('type','button' );
+            $btn.prop('orig_label',$btn.text());
+            $btn.text('Sending ...');
+        });
+
+
+                    $.ajax({
+                type: "POST",
+                url: 'handler.php',
+                data: $form.serialize(),
+                success: after_form_submitted,
+                dataType: 'json'
+            });
+
+      });
+});
+</script>
 <body>
         <section id="contact" class="content-section text-center">
                 <div class="contact-section">
@@ -28,32 +93,68 @@
                             <p>If you have any questions about getting access to the monsoon server, </p>
                             <p>BioNetWeb or BioNetFit, send us an email below</p>
                             
-                            <form method="POST" enctype="multipart/form-data">
+			<form role="form" method="post" id="reused_form">
+            			<div class="row">
+                		<div class="col-sm-12 form-group">
+                		<label>How do you rate your overall experience?</label>
+                		<p>
+                    		<label class="radio-inline">
+                    		<input type="radio" name="experience" id="radio_experience" value="bad" >
+                    		Bad
+                    		</label>
 
-                                <div class="col-xs-4">
-                                    <label for="inputName">Name</label>
-                                    <input type="text" class="form-control" id="inputName" placeholder="Jane Doe" width="100">
-                                </div>
-                                
-                                <br>
+                    		<label class="radio-inline">
+                    		<input type="radio" name="experience" id="radio_experience" value="average" >
+                    		Average
+                    		</label>
 
-                                <div class="col-xs-4">
-                                    <label for="inputEmail">Email</label>
-                                    <input type="text" class="form-control" id="inputEmail" placeholder="example@email.com" width="100">
-                                </div>
-                                
-                                <br>
+                    		<label class="radio-inline">
+                    		<input type="radio" name="experience" id="radio_experience" value="good" >
+                    		Good
+                    		</label>
+                		</p>
+                		</div>
+            		</div>
+            		<div class="row">
+                		<div class="col-sm-12 form-group">
+                    		<label for="comments">
+                        		Comments:</label>
+                    		<textarea class="form-control" type="textarea" name="comments" id="comments" placeholder="Your Comments" maxlength="6000" rows="7"></textarea>
+                		</div>
+            		</div>
+            		<div class="row">
+                		<div class="col-sm-6 form-group">
+                    		<label for="name">
+                        		Your Name:</label>
+                    		<input type="text" class="form-control" id="name" name="name" required>
+                		</div>
+                		<div class="col-sm-6 form-group">
+                    		<label for="email">
+                        		Email:</label>
+                    		<input type="email" class="form-control" id="email" name="email" required>
+                		</div>
+            		</div>
 
-                                <div class="col-xs-4">
-                                    <label for="exampleInputText">Your Message</label>
-                                   <textarea  class="form-control" placeholder="Description"></textarea> 
-                                </div>                                
+                        		<div class="row">
+                		<div class="col-sm-12 form-group">
+                    		<button type="submit" class="btn btn-lg btn-warning btn-block" >Submit </button>
+                		</div>
+            		</div>
+
+        		</form>
+
+
                             
-                                <br><br>
-                            
-                                <input id="submit-btn" type="submit" value="Submit" disabled>
-                            
-                            </form>
+
+			    <div id="success_message" style="width:100%; height:100%; display:none; ">
+				<h3>Posted your feedback successfully!</h3>
+			    </div>
+
+			    <div id="error_message"
+			       style="width:100%; height:100%; display:none; ">
+				 <h3>Error</h3>
+				 Sorry there was an error sending your form.
+			    </div>
                         </div>
                     </div>
                 </div>
