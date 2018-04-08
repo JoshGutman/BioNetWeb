@@ -26,14 +26,14 @@ SECRET_KEY = S_SECRET_KEY
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["bionetfitweb.cefns.nau.edu", "localhost", "bionetfitweb"]
 
 
 # Application definition
 
 INSTALLED_APPS = [
     'home',
-	'config',
+    'config',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
