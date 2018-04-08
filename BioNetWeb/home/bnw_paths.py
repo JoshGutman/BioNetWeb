@@ -1,10 +1,17 @@
 class Paths:
 
+    '''
     bionetfit = "/scratch/jng86/BioNetFit2_pull1/bin/BioNetFit2"
     bin_loc = "/scratch/jng86/BioNetFit2_pull1/bin/"
     bng_command = "/scratch/jng86/BioNetFit2_pull1/Simulators/BNG2.pl"
     output = "/scratch/jng86/bnw/"
     monsoon_ssh = "monsoon.hpc.nau.edu"
+    '''
+    bionetfit = "/scratch/bionetfit/BioNetFit2_pull1/bin/BioNetFit2"
+    bin_loc = "/scratch/bionetfit/BioNetFit2_pull1/bin/"
+    bng_command = "/scratch/bionetfit/BioNetFit2_pull1/Simulators/BNG2.pl"
+    output = "/scratch/bionetfit/bnw/"
+    monsoon_ssh = "bionetfithead.cefns.nau.edu"
     delimiter = "__dot__"    # MongoDB doesn't allow "." in key names
 
 
