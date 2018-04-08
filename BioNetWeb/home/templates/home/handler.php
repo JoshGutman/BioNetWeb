@@ -20,7 +20,9 @@ $validator->field('comments')->maxLength(6000);
 
 
 
-$pp->sendEmailTo('<Abolfazl.razi@nau.edu>'); // Your email here
+$pp->sendEmailTo('<jng86@nau.edu>'); // Your email here
 $fh->sendEmailTo(['cmc699@nau.edu']); //a second email
 
 echo $pp->process($_POST);
+
+?>
