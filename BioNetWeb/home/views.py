@@ -7,7 +7,7 @@ from pymongo import MongoClient
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
-
+from . import options
 from . import bnw_paths
 from . import secret_login
 from . import ssh_connection
@@ -25,7 +25,20 @@ def index(request):
             exp_file = request.FILES.get('exp', '')
             observables, bngl = get_free_parameters(bngl_file.file)
             exp = get_file_contents(exp_file.file)
-            return render(request, 'config/create.html', {'observables': observables, 'bngl': bngl, 'exp': exp, 'bngl_name': str(bngl_file) , 'exp_name': str(exp_file)})
+
+            return render(request, 'config/create.html', {'observables': observables,
+                                                          'bngl': bngl,
+                                                          'exp': exp,
+                                                          'bngl_name': str(bngl_file),
+                                                          'exp_name': str(exp_file),
+                                                          "my_options": ["option1", "option2", "option3"],
+                                                          'general_visible': options.general_visible,
+                                                          'general_hidden': options.general_hidden,
+                                                          'fitting_visible': options.fitting_visible,
+                                                          'fitting_hidden': options.fitting_hidden,
+                                                          'cluster_hidden': options.cluster_hidden,
+                                                          'path_hidden': options.path_hidden,
+                                                          'display_hidden': options.display_hidden})
 
         elif 'download' in request.POST:
             print('1')
@@ -212,6 +225,8 @@ def user(request):
     if request.method == 'POST':
 
         if "type" in request.POST:
+
+            # Get project contents
             if request.POST.get("type") == "project":
                 time_id = request.POST["project"]
                 user = str(request.user)
@@ -227,7 +242,7 @@ def user(request):
                            
                 return HttpResponse(json.dumps(projects[time_id]))
 
-
+            # Get file contents
             elif request.POST.get("type") == "file":
                 path = json.loads(request.POST.get("file"))
                 username = str(request.user)
@@ -242,7 +257,21 @@ def user(request):
                 
                 return HttpResponse(json.dumps(file_contents))
 
-        else:    
+            # Visualization
+            elif request.POST.get("type") == "visualization":
+                visual_type = request.POST.get("visualization")
+                print(visual_type)
+                
+
+        # User is running a job on Monsoon
+        else:
+
+            if not request.user.is_authenticated:
+                return HttpResponse()
+
+            if not request.user.groups.filter(name="monsoon").exists():
+                return HttpResponse()
+            
             # Use seconds past epoch for unique job name for now
             time_id = str(int(time.time()))
             
@@ -305,6 +334,8 @@ def user(request):
                     [conf_name, bngl_name, exp_name]), [conf, bngl, exp]):
                 add_input_file(user, time_id, filename, contents)
             set_slurm_id(user, time_id, job_id)
+
+            return HttpResponse(json.dumps("success"))
 
 
 
@@ -376,3 +407,6 @@ def signup(request):
     else:
         form = UserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
+
+
+
