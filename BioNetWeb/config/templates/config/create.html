@@ -139,7 +139,6 @@
 		<h2 id="free-options">Free Options</h2>
 		
 		
-			{% include "config/mutate_input.html" with label="mutate" description="This option is used to identify a free parameter. It has three arguments. The first is a parameter identifier or parameter name. We recommend that parameter identifiers such as p__FREE__be used rather than parameter names such as p. See Section IV.B.3 in http://bionetfit.nau.edu/files/BioNetFit_User_Manual.pdf. The second argument is the 'mutation' rate (Q2). This quantity is a probability and therefore it must take values between 0 and 1. The third argument sets a range in which a factor will fall. This factor multiplies the old value of a parameter to obtain a new 'mutated' value of the parameter. The factor is chosen randomly. It is a uniform random deviate U that lies between 1 -arg3 and 1 + arg3, where arg3 is the user-specified value of the third argument. In other words, p_new = p_old*U = " %}
 			{% for o in observables %}
 				{% include "config/free_input.html" with label=o description="free observable"  %}
 			{% endfor %}
@@ -181,6 +180,7 @@
 		
 		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-fitting">Optional parameters</button>
 		<div id="optional-fitting" class="collapse">
+			{% include "config/mutate_input.html" with label="mutate" description="This option is used to identify a free parameter. It has three arguments. The first is a parameter identifier or parameter name. We recommend that parameter identifiers such as p__FREE__be used rather than parameter names such as p. See Section IV.B.3 in http://bionetfit.nau.edu/files/BioNetFit_User_Manual.pdf. The second argument is the 'mutation' rate (Q2). This quantity is a probability and therefore it must take values between 0 and 1. The third argument sets a range in which a factor will fall. This factor multiplies the old value of a parameter to obtain a new 'mutated' value of the parameter. The factor is chosen randomly. It is a uniform random deviate U that lies between 1 -arg3 and 1 + arg3, where arg3 is the user-specified value of the third argument. In other words, p_new = p_old*U = " %}
 			{% for option in fitting_hidden %}
 				{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 			{% endfor %}
@@ -223,7 +223,7 @@
 		<!--<form method="POST" enctype="multipart/form-data">{% csrf_token %}-->
 		<div id="buttons"style="float: left">
 			<input id="download" type="submit" value="Download" name="download">
-			<input id="monsoon" type="submit" value="Monsoon" name="monsoon">
+			<input action="download('download.txt', getData())" id="monsoon" type="submit" value="Monsoon" name="monsoon">
 		</div>
 		<br>
 		<br>
@@ -358,16 +358,13 @@
 		}
 	});
 
-	// Preset input live preview
-	$(".preset").change(function () {
+	// Listbox input live preview
+	$(".listbox").change(function () {
 		var oldId = $(this).attr("id");
 		var newId = oldId + "-p";
+		var val = $(this).find(":selected").text();
 		$("#" + newId).css("display", "block");
-		if(this.checked) {
-			$("#" + newId).html(oldId + "id");
-		} else {
-			$("#" + newId).html(oldId + "id");
-		}
+		$("#" + newId).html(oldId + "=" + val);
 	});
 	
 	// Free input live preview
@@ -393,36 +390,16 @@
 		}
 	});
 	
+	
 	$(function() {
 		$("#monsoon").click(function() {
-			var data = "";
-			var mutateFields = document.getElementsByClassName("mutate");
-			var freeFields = document.getElementsByClassName("free");
-			var normalFields = document.getElementsByClassName("normal");
-			var boolFields = document.getElementsByClassName("bool");
 
-			for (var i = 0; i < mutateFields.length; i+=2) {
-				var name = mutateFields[i].id.split("-")[0];
-				data += "mutate=default" + " " + mutateFields[i].value + " " + mutateFields[i+1].value + "\n";
-			}
+			var data = getData();
 			
-			for (var i = 0; i < freeFields.length; i+=2) {
-				var name = freeFields[i].id.split("-")[0];
-				data += "loguniform_var=" + name + " " + freeFields[i].value + " " + freeFields[i+1].value + "\n";
-			}
-			
-			for (var i = 0; i < normalFields.length; i++) {
-				var parent = document.getElementById(normalFields[i].id + "-p");
+			for (var i = 0; i < listboxFields; i++) {
+				var parent = document.getElementById(listboxFields[i].id + "-p");
 				if (parent.style.display != "none") {
-					data += normalFields[i].id + "=" + normalFields[i].value + "\n"
-				}
-			}
-			
-			for (var i = 0; i < boolFields.length; i++) {
-				var parent = document.getElementById(boolFields[i].id + "-p");
-				if (parent.style.display != "none") {
-					var checked = boolFields[i].checked ? "1" : "0";
-					data += boolFields[i].id + "=" + checked + "\n";
+					data += boolFields[i].id + "=" + listboxFields[i][listboxFields.selectedIndex].value + "\n";
 				}
 			}
 			
@@ -498,6 +475,54 @@
 			$("#"+key).trigger("change");
 			$("#"+key).trigger("keyup");
 		}
+	}
+	
+	function download(filename, text) {
+		var element = document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+		element.setAttribute('download', filename);
+
+		element.style.display = 'none';
+		document.body.appendChild(element);
+
+		element.click();
+		
+		document.body.removeChild(element);
+	}
+	
+	function getData() {
+		var data = "";
+		var mutateFields = document.getElementsByClassName("mutate");
+		var freeFields = document.getElementsByClassName("free");
+		var normalFields = document.getElementsByClassName("normal");
+		var boolFields = document.getElementsByClassName("bool");
+
+		for (var i = 0; i < mutateFields.length; i+=2) {
+			var name = mutateFields[i].id.split("-")[0];
+			data += "mutate=default" + " " + mutateFields[i].value + " " + mutateFields[i+1].value + "\n";
+		}
+			
+		for (var i = 0; i < freeFields.length; i+=2) {
+			var name = freeFields[i].id.split("-")[0];
+			data += "loguniform_var=" + name + " " + freeFields[i].value + " " + freeFields[i+1].value + "\n";
+		}
+			
+		for (var i = 0; i < normalFields.length; i++) {
+			var parent = document.getElementById(normalFields[i].id + "-p");
+			if (parent.style.display != "none") {
+				data += normalFields[i].id + "=" + normalFields[i].value + "\n"
+			}
+		}
+			
+		for (var i = 0; i < boolFields.length; i++) {
+			var parent = document.getElementById(boolFields[i].id + "-p");
+			if (parent.style.display != "none") {
+				var checked = boolFields[i].checked ? "1" : "0";
+				data += boolFields[i].id + "=" + checked + "\n";
+			}
+		}
+		
+		return data;
 	}
 </script>
 {% endblock %}
