@@ -4,9 +4,9 @@
 	<select class="{{ label }}">
 		{% for option in options %}
 			{% if option == default %}
-				<option value="{{ option }}" selected>{{ option }}</option>
+				<option id="{{ label }}" value="{{ option }}" selected>{{ option }}</option>
 			{% else %}
-				<option value="{{ option }}">{{ option }}</option>
+				<option id="{{ label }}" value="{{ option }}">{{ option }}</option>
 			{% endif %}
 		{% endfor %}
 	</select>
