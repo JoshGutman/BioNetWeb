@@ -395,36 +395,7 @@
 	
 	$(function() {
 		$("#monsoon").click(function() {
-			var data = "";
-			var mutateFields = document.getElementsByClassName("mutate");
-			var freeFields = document.getElementsByClassName("free");
-			var normalFields = document.getElementsByClassName("normal");
-			var boolFields = document.getElementsByClassName("bool");
-
-			for (var i = 0; i < mutateFields.length; i+=2) {
-				var name = mutateFields[i].id.split("-")[0];
-				data += "mutate=default" + " " + mutateFields[i].value + " " + mutateFields[i+1].value + "\n";
-			}
-			
-			for (var i = 0; i < freeFields.length; i+=2) {
-				var name = freeFields[i].id.split("-")[0];
-				data += "loguniform_var=" + name + " " + freeFields[i].value + " " + freeFields[i+1].value + "\n";
-			}
-			
-			for (var i = 0; i < normalFields.length; i++) {
-				var parent = document.getElementById(normalFields[i].id + "-p");
-				if (parent.style.display != "none") {
-					data += normalFields[i].id + "=" + normalFields[i].value + "\n"
-				}
-			}
-			
-			for (var i = 0; i < boolFields.length; i++) {
-				var parent = document.getElementById(boolFields[i].id + "-p");
-				if (parent.style.display != "none") {
-					var checked = boolFields[i].checked ? "1" : "0";
-					data += boolFields[i].id + "=" + checked + "\n";
-				}
-			}
+			var data = getData();
 			
 			
 			$.ajax({type: "POST",
@@ -512,6 +483,41 @@
 		element.click();
 		
 		document.body.removeChild(element);
+	}
+	
+	function getData() {
+		var data = "";
+		var mutateFields = document.getElementsByClassName("mutate");
+		var freeFields = document.getElementsByClassName("free");
+		var normalFields = document.getElementsByClassName("normal");
+		var boolFields = document.getElementsByClassName("bool");
+
+		for (var i = 0; i < mutateFields.length; i+=2) {
+			var name = mutateFields[i].id.split("-")[0];
+			data += "mutate=default" + " " + mutateFields[i].value + " " + mutateFields[i+1].value + "\n";
+		}
+			
+		for (var i = 0; i < freeFields.length; i+=2) {
+			var name = freeFields[i].id.split("-")[0];
+			data += "loguniform_var=" + name + " " + freeFields[i].value + " " + freeFields[i+1].value + "\n";
+		}
+			
+		for (var i = 0; i < normalFields.length; i++) {
+			var parent = document.getElementById(normalFields[i].id + "-p");
+			if (parent.style.display != "none") {
+				data += normalFields[i].id + "=" + normalFields[i].value + "\n"
+			}
+		}
+			
+		for (var i = 0; i < boolFields.length; i++) {
+			var parent = document.getElementById(boolFields[i].id + "-p");
+			if (parent.style.display != "none") {
+				var checked = boolFields[i].checked ? "1" : "0";
+				data += boolFields[i].id + "=" + checked + "\n";
+			}
+		}
+		
+		return data;
 	}
 </script>
 {% endblock %}
