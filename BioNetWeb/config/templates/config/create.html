@@ -566,54 +566,31 @@
 	}
 
 	function erasePresets(){
-		document.getElementById("parallel_count").value=4;
-		document.getElementById("parallel_count-p").style.display="block";
-		document.getElementById("max_generations").value=50;
-		document.getElementById("smoothing").value=1;
-		document.getElementById("objfunc").value=3;
-		document.getElementById("extra_weight").value=0;
-		document.getElementById("swap_rate").value=0.5;
-		document.getElementById("keep_parents").value=1;
-		
-		document.getElementById("log_transform_sim_data").value=0;
-		document.getElementById("population_size").value=4;
-		document.getElementById("fit_type").value="ga";
-		document.getElementById("output_every").value=10;
-		document.getElementById("num_islands").value=3;
-		document.getElementById("mutate_type").value=4;
-		document.getElementById("cr").value=0.8;
-		document.getElementById("migration_frequency").value=8;
-		document.getElementById("num_to_migrate").value=3;
-		document.getElementById("inertia").value=0.82;
-		document.getElementById("cognitive").value=1.49;
-		document.getElementById("social").value=1.49;
-		document.getElementById("nmin").value=80;
-		document.getElementById("inertiaInit").value=1;
-		document.getElementById("inertiaFinal").value=0.1;
-		document.getElementById("abs_tolerance").value=10e-4;
-		document.getElementById("rel_tolerance").value=10e-4;
-		document.getElementById("mutate_qpso").value=1;
-		document.getElementById("topology").value="fullyconnected";
-		document.getElementById("pso_type").value="pso";
-		document.getElementById("synchronicity").checked=true;
-		document.getElementById("enhanced_stop").checked=false;
-		document.getElementById("enhanced_inertia").checked=false;
-		document.getElementById("use_pipes").checked=false;
-		document.getElementById("divide_by_init").checked=false;
-		document.getElementById("make_plots").checked=true;
-
-		document.getElementById("cluster_software").value="BNF2mpi";
-		document.getElementById("use_cluster").checked=true;
-		document.getElementById("delete_old_files").checked=true;
-		document.getElementById("ask_create").checked=true;
-		document.getElementById("ask_overwrite").checked=true;
-		document.getElementById("show_welcome_message").checked=true;
-		document.getElementById("model").value="/scratch/jng86/bnw/jng86/1521242221/example5.bngl";
-		document.getElementById("exp_file").value="/scratch/jng86/bnw/jng86/1521242221/example5.exp";
-		document.getElementById("output_dir").value="/scratch/jng86/bnw/jng86/1521242221";
-		document.getElementById("bng_command").value="/scratch/jng86/BioNetFit2_pull1/Simulators/BNG2.pl";
-		document.getElementById("job_name").value="jng86_1521242221";
-		document.getElementById("min_objfunc_value").value=1;
+		var normalMap = {"parallel_count" : "4", "max_generations" : "50", "smoothing" : "1" , "objfunc" : "3", "extra_weight" : "0", 
+		                "smoothing" : "1", "extra_weight" : "0", "swap_rate" : "0.5", "keep_parents" : "1" , "log_transform_sim_data" : "0",
+						"population_size" : "4", "fit_type" : "ga", "output_every" : "10", "num_islands" : "3" , "mutate_type" : "4",
+						"cr" : "0.8", "migration_frequency" : "8", "num_to_migrate" : "3", "inertia" : "0.82" , "cognitive" : "1.49",
+						"social" : "1.49", "nmin" : "80", "inertiaInit" : "1", "inertiaFinal" : "0.1" , "abs_tolerance" : "10e-4",
+						"rel_tolerance" : "10e-4", "mutate_qpso" : "1", "topology" : "fullyconnected", "pso_type" : "pso" , "synchronicity" : "true",
+						"enhanced_stop" : "false", "enhanced_inertia" : "false", "use_pipes" : "false", "divide_by_init" : "false" , "make_plots" : "true",
+						"cluster_software" : "BNF2mpi", "use_cluster" : "true", "delete_old_files" : "true", "ask_create" : "true" , "ask_overwrite" : "true",
+						"show_welcome_message" : "true", "model" : "/scratch/jng86/bnw/jng86/1521242221/example5.bngl", "exp_file" : "/scratch/jng86/bnw/jng86/1521242221/example5.exp", 
+						"output_dir" : "/scratch/jng86/bnw/jng86/1521242221", "bng_command" : "/scratch/jng86/BioNetFit2_pull1/Simulators/BNG2.pl", "job_name" : "jng86_1521242221", "min_objfunc_value" : "1"}
+	
+		var length = normalMap.length;
+		for( var key in normalMap) {
+			var e = normalMap[key];
+			if(e == "true" || e == "false") {
+				document.getElementById(key).checked=false;
+			}
+			else {
+				document.getElementById(key).value=null;
+			}
+			var label = document.getElementById(key + "-p");
+			label.style.display = "block";
+			$("#"+key).trigger("change");
+			$("#"+key).trigger("keyup");
+		}
 	}
 </script>
 {% endblock %}
