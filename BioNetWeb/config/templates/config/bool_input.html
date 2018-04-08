@@ -2,6 +2,10 @@
 	<span class="input-group-addon">{{ label }}</span>
 	<span class="tooltiptext">{{ description  }}</span>
 	<span class="input-group-addon" name="checkbox">
-	<input class="bool" type="checkbox" id="{{ label }}" {{ checked }}>
+	{% if default == "checked" %}
+		<input class="bool" type="checkbox" id="{{ label }}" checked>
+	{% else %}
+		<input class="bool" type="checkbox" id="{{ label }}">
+	{% endif %}
 	</span>
 </div>
