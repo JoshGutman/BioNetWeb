@@ -87,6 +87,11 @@
 		font-size: 60%;
 	}
 	
+	.visualization {
+		cursor: pointer;
+		margin-bottom: 2px;
+	}
+	
 </style>
 
 <body>
@@ -111,9 +116,16 @@
 					</div>
 				</div>
 				
-					<br>
 				<br>
 				
+				<div style="margin-right: 5%" class="dropdown">
+					<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Visualizations
+					<span class="caret"></span></button>
+					<ul class="dropdown-menu">
+						<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
+						<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
+					</ul>
+				</div>
 				
 				
 				</div> <!-- left column -->
@@ -158,6 +170,26 @@
     </div> <!-- container-fluid -->
 </body>
 
+
+<script>
+
+	$(document).ready(function() {
+		$(".visualization").click(function() {
+			$.ajax({type: "POST",
+					url: "/user",
+					dataType: "json",
+					data: {type: "visualization",
+							visualization: $(this).attr("id"),
+							csrfmiddlewaretoken: '{{ csrf_token }}'},
+					success: function(response)
+						{
+							
+						}
+			});
+		});
+	});
+</script>
+
 <script>
 
 	
@@ -187,7 +219,7 @@
 				
 	// Update the file system preview
 	function updatePreview() {
-	
+		console.log(path);
 		var isInner = path.length == 0 ? false : true;
 	
 		var currentLevel = structure;
@@ -232,6 +264,7 @@
 							$("#file-system").css("display", "visible");
 							
 							structure = response;
+							path = [];
 							updatePreview(); 
 							
 						}
