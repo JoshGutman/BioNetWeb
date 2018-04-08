@@ -549,11 +549,19 @@
 						"show_welcome_message" : "true", "model" : "/scratch/jng86/bnw/jng86/1521242221/example5.bngl", "exp_file" : "/scratch/jng86/bnw/jng86/1521242221/example5.exp", 
 						"output_dir" : "/scratch/jng86/bnw/jng86/1521242221", "bng_command" : "/scratch/jng86/BioNetFit2_pull1/Simulators/BNG2.pl", "job_name" : "jng86_1521242221", "min_objfunc_value" : "1"}
 	
-		var dictionary = getElementsByClassName(document, "demo");
-		n = dictionary.length;
-		for( var i = 0; i < n; i++) {
-			var e = dictionary[i].id + "-p";
-			e.style.display = "block"
+		var length = normalMap.length;
+		for( var key in normalMap) {
+			var e = normalMap[key];
+			if(e == "true" || e == "false") {
+				document.getElementById(key).checked=e;
+			}
+			else {
+				document.getElementById(key).value=e;
+			}
+			var label = document.getElementById(key + "-p");
+			label.style.display = "block";
+			$("#"+key).trigger("change");
+			$("#"+key).trigger("keyup");
 		}
 	}
 
