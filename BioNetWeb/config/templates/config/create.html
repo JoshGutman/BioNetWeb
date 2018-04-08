@@ -138,25 +138,20 @@
 
 		<h2 id="free-options">Free Options</h2>
 		
-		{% block my_options %}
-		{% include "config/listbox_input.html" with label="test" options=my_options description="test" %}
-		{% endblock %}
 		
-		{% block observables %}
 			{% include "config/mutate_input.html" with label="mutate" description="This option is used to identify a free parameter. It has three arguments. The first is a parameter identifier or parameter name. We recommend that parameter identifiers such as p__FREE__be used rather than parameter names such as p. See Section IV.B.3 in http://bionetfit.nau.edu/files/BioNetFit_User_Manual.pdf. The second argument is the 'mutation' rate (Q2). This quantity is a probability and therefore it must take values between 0 and 1. The third argument sets a range in which a factor will fall. This factor multiplies the old value of a parameter to obtain a new 'mutated' value of the parameter. The factor is chosen randomly. It is a uniform random deviate U that lies between 1 -arg3 and 1 + arg3, where arg3 is the user-specified value of the third argument. In other words, p_new = p_old*U = " %}
 			{% for o in observables %}
 				{% include "config/free_input.html" with label=o description="free observable"  %}
 			{% endfor %}
-		{% endblock %}
+		
 		
 		<br>
 		<br>
 		
 		<h2>General Options</h2>
 		
-		<!--{% include "config/normal_input.html" with label="parallel_count" description="Number of models to run simultaneously when running on a personal computer. It is recommended that this is set to the number of CPU cores present in your machine. Default is 2."%}-->
 		{% for option in general_visible %}
-			{% include option.input_type with label=option.name description=option.description %}
+			{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 		{% endfor %}
 		
 		<div class="input-group">
@@ -172,7 +167,7 @@
 		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-general">Optional parameters</button>
 		<div id="optional-general" class="collapse">
 			{% for option in general_hidden %}
-				{% include option.input_type with label=option.name description=option.description %}
+				{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 			{% endfor %}
 		</div>
 		
@@ -181,13 +176,13 @@
 		
 		<h2>Fitting Options</h2>
 		{% for option in fitting_visible %}
-			{% include option.input_type with label=option.name description=option.description %}
+			{% include option.input_type with label=option.name description=option.description default=option.default %}
 		{% endfor %}
 		
 		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-fitting">Optional parameters</button>
 		<div id="optional-fitting" class="collapse">
 			{% for option in fitting_hidden %}
-				{% include option.input_type with label=option.name description=option.description %}
+				{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 			{% endfor %}
 			
 		</div>
@@ -197,8 +192,8 @@
 		
 		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#cluster-options">Cluster Options</h2>
 		<div id="cluster-options" class="collapse">
-			{% for option in cluster_visible %}
-				{% include option.input_type with label=option.name description=option.description %}
+			{% for option in cluster_hidden %}
+				{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 			{% endfor %}
 		</div>
 		
@@ -208,7 +203,7 @@
 		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#path-options">Path Options</h2>
 		<div id="path-options" class="collapse">
 			{% for option in path_hidden %}
-				{% include option.input_type with label=option.name description=option.description %}
+				{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 			{% endfor %}
 		</div>
 		
@@ -218,7 +213,7 @@
 		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#display-options">Display Options</h2>
 		<div id="display-options" class="collapse">
 			{% for option in display_hidden %}
-				{% include option.input_type with label=option.name description=option.description %}
+				{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 			{% endfor %}
 		</div>
 		
