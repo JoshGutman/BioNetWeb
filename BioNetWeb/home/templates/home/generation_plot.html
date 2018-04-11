@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css"> /* set the CSS */
+
+body { font: 12px Arial;}
+
+path { 
+	stroke-width: 2;
+	fill: none;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+
+}
+.slider {
+	width: 800px;
+}
+
+.legend rect {
+	fill:white;
+	stroke:black;
+	opacity:0.8;
+}
+  
+.exp {
+	stroke-dasharray: 5,5;
+}
+ 
+ .cb {
+	margin: 2px;
+ }
+
+
+
+</style>
+
+<body>
+
+
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="d3.legend.js"></script>
+
+<script>
+
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
+
+var margin = {top: 100, right: 60, bottom: 60, left: 60},
+    width = (650) - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear().range([0,width]);
+var y = d3.scale.linear().range([height,0]);
+
+var xAxis = d3.svg.axis()
+	.scale(x)
+	.orient("bottom");
+var yAxis = d3.svg.axis()
+	.scale(y)
+	.orient("left");
+		
+var chart1 = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform",
+		"translate(" + margin.left + "," + margin.top + ")");
+		
+var chart2 = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform",
+		"translate(" + margin.left + "," + margin.top + ")");
+		
+		
+chart1.append("text")
+	.attr("x", (width / 2))             
+	.attr("y", 0 - (margin.top / 2))
+	.attr("text-anchor", "middle")  
+	.style("font-size", "16px") 
+	.style("text-decoration", "underline")  
+	.text("Best Observables vs. Time");
+
+chart1.append("text")
+	.attr("text-anchor", "middle")
+	.attr("transform", "translate(-50," + height/2 + ")rotate(-90)")
+	.text("Number of Molecules");
+
+chart1.append("text")
+	.attr("text-anchor", "middle")
+	.attr("transform", "translate("+ (margin.top + width/3) +","+(height+40)+")")  // centre below axis
+	.text("Time (seconds)");
+	
+chart2.append("text")
+	.attr("x", (width / 2))             
+	.attr("y", 0 - (margin.top / 2))
+	.attr("text-anchor", "middle")  
+	.style("font-size", "16px") 
+	.style("text-decoration", "underline")  
+	.text("Average Observables vs. Time");
+	
+chart2.append("text")
+	.attr("text-anchor", "middle")
+	.attr("transform", "translate(-50," + height/2 + ")rotate(-90)")
+	.text("Number of Molecules");
+
+chart2.append("text")
+	.attr("text-anchor", "middle")
+	.attr("transform", "translate("+ (margin.top + width/3) +","+(height+40)+")")  // centre below axis
+	.text("Time (seconds)");
+
+var colors = d3.scale.category20();
+
+function updateGraph() {
+
+	var best_data = "{{ best_data }}";
+	var avg_data = "{{ avg_data }}";
+	var exp_data = "{{ exp_data }}"
+	
+	var best = d3.csv.parse(best_data);
+	var avg = d3.csv.parse(avg_data);
+	var exp = d3.csv.parse(exp_data);
+	
+	makeGraphs("", best, avg, exp);
+}
+
+
+
+function makeGraphs(error, best_data, avg_data, exp_data) {
+	if (error) {
+		console.error("Error reading csv files: " + error);
+	} else {
+		drawLines(best_data, exp_data, chart1);
+		drawLines(avg_data, exp_data, chart2);
+	}
+}
+
+function drawLines(perm_data, exp_data, chart) {
+	
+	
+	var paths = chart.selectAll(".obv").remove();
+	var axes = chart.selectAll(".axis").remove();
+	
+	var genNum = document.getElementById("genSlider").value;
+	var cbs = document.getElementsByClassName("cb");
+	
+	var names = [];
+	for (var i = 0; i < cbs.length; i++) {
+		if (cbs[i].checked) {
+			names.push(cbs[i].id);
+		}
+	}
+	
+	// Coerce data to integers/floats
+	perm_data.forEach(function(d) {
+		d.value = +d.value;
+		d.time = +d.time;
+	});
+	
+	exp_data.forEach(function(d) {
+		d.value = +d.value;
+		d.time = +d.time;
+	});
+	
+	var allData = [];
+	var dataset = {};
+	
+	perm_data.forEach(function(d) {
+
+		if (names.includes(d.name)) {
+			allData.push(d);
+			
+			if ((+d.gen) == genNum) {
+				if (d.name in dataset) {
+					dataset[d.name].push(d);
+				} else {
+					dataset[d.name] = [d];
+				}
+			}			
+		}		
+	});
+	
+	var expData = {};
+	exp_data.forEach(function(d) {
+		if (names.includes(d.name)) {
+			allData.push(d);
+			if (d.name in expData) {
+				expData[d.name].push(d);
+			} else {
+				expData[d.name] = [d];
+			}
+		}
+	});
+	
+	for (var name in dataset) {
+		dataset[name].sort(function(a, b) { return a.time - b.time } );
+	}
+	
+	for (var name in expData) {
+		expData[name].sort(function(a, b) { return a.time - b.time } );
+	}
+	
+	var line = d3.svg.line()
+		.x(function(d) { return x(d.time); })
+		.y(function(d) { return y(d.value); })
+		.interpolate("basis");
+		
+	x.domain(d3.extent(allData, function(d) { return d.time; }));
+	y.domain(d3.extent(allData, function(d) { return d.value; }));
+	
+	
+	// Draw permutation data
+	for (var name in dataset) {
+		chart.append("path")
+			.attr("class", "line obv-{0} obv".format(name))
+			.attr("stroke", colors(name))
+			.attr("data-legend", name)
+			.attr("d", line(dataset[name]));	
+	}
+	
+	// Draw exp data
+	for (var name in expData) {
+		chart.append("path")
+			.attr("class", "line obv-{0} obv exp".format(name))
+			.attr("stroke", colors(name))
+			.attr("data-legend", name)
+			.attr("d", line(expData[name]));	
+	}
+	
+	// Add the X Axis
+	chart.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis);
+
+	// Add the Y Axis
+	chart.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+	
+	// Add the legend
+	if (document.getElementsByClassName("legend").length == 0) {
+		legend = chart.append("g")
+			.attr("class", "legend")
+			.attr("transform","translate(-50,-50)")
+			.style("font-size","12px")
+			.call(d3.legend);
+	}
+		
+}
+
+
+
+
+
+</script>
+
+
+	<input type="range" min="1" max="{{ max_gen }}" value="1" class="slider" id="genSlider" oninput="updateSlider(this.value)">
+	<input type="text" id="genDisplay" value="1">
+	<br>
+	
+	{% for obv in observables %}
+		<input type="checkbox" id="{{ obv }}" class="cb" onchange="updateCB(this)" checked>{{ obv }}<br>
+	{% endfor %}
+
+	
+	<script>
+		function updateSlider(val) {
+			document.getElementById("genDisplay").value = val;
+			updateGraph();
+		}
+		
+		function updateCB(obj) {
+			updateGraph();
+		}
+
+		window.onload = updateSlider(document.getElementById("genSlider").value);
+	</script>
+	
+</body>

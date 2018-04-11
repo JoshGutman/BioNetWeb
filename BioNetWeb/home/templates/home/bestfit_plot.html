@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+
+body { font: 12px Arial;}
+
+path { 
+	stroke-width: 2;
+	fill: none;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+
+}
+.slider {
+	width: 800px;
+}
+
+.legend rect {
+  fill:white;
+  stroke:black;
+  opacity:0.8;}
+  
+ .exp {
+	stroke-dasharray: 5,5;
+ }
+
+
+</style>
+
+<body>
+
+
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<!--<script src="d3.legend.js"></script>-->
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>-->
+<script src="https://d3js.org/d3-queue.v3.min.js"></script>
+
+<script>
+
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
+
+var margin = {top: 100, right: 60, bottom: 60, left: 60},
+    width = (650) - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear().range([0,width]);
+var y = d3.scale.linear().range([height,0]);
+
+var xAxis = d3.svg.axis()
+	.scale(x)
+	.orient("bottom");
+var yAxis = d3.svg.axis()
+	.scale(y)
+	.orient("left");
+		
+var chart1 = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform",
+		"translate(" + margin.left + "," + margin.top + ")");
+		
+		
+chart1.append("text")
+	.attr("x", (width / 2))             
+	.attr("y", 0 - (margin.top / 2))
+	.attr("text-anchor", "middle")  
+	.style("font-size", "16px") 
+	.style("text-decoration", "underline")  
+	.text("Best Observables vs. Time");
+
+chart1.append("text")
+	.attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+	.attr("transform", "translate(-50," + height/2 + ")rotate(-90)")
+	.text("Number of Molecules");
+
+chart1.append("text")
+	.attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+	.attr("transform", "translate("+ (margin.top + width/3) +","+(height+40)+")")  // centre below axis
+	.text("Time (seconds)");
+
+
+var colors = d3.scale.category20();
+
+function updateGraph() {
+
+	var best_data = "{{ best_data }}";
+	var exp_data = "{{ exp_data }}";
+
+	var best = d3.csv.parse(best_data);
+	var exp = d3.csv.parse(exp_data);
+	
+	makeGraphs("", best, exp);
+}
+
+function makeGraphs(error, best_data, exp_data) {
+	if (error) {
+		console.error("Error reading csv files: " + error);
+	} else {
+		drawLines(best_data, exp_data, chart1);
+	}
+}
+
+function drawLines(perm_data, exp_data, chart) {
+	
+	
+	var paths = chart.selectAll(".obv").remove();
+	var axes = chart.selectAll(".axis").remove();
+	
+	var cbs = document.getElementsByClassName("cb");
+	
+	var names = [];
+	for (var i = 0; i < cbs.length; i++) {
+		if (cbs[i].checked) {
+			names.push(cbs[i].id);
+		}
+	}
+	
+	// Coerce data to integers/floats
+	perm_data.forEach(function(d) {
+		d.value = +d.value;
+		d.time = +d.time;
+	});
+	
+	exp_data.forEach(function(d) {
+		d.value = +d.value;
+		d.time = +d.time;
+	});
+	
+	var allData = [];
+	var dataset = {};
+	
+	perm_data.forEach(function(d) {
+
+		if (names.includes(d.name)) {
+			allData.push(d);
+			
+				if (d.name in dataset) {
+					dataset[d.name].push(d);
+				} else {
+					dataset[d.name] = [d];
+				}
+					
+		}		
+	});
+	
+	var expData = {};
+	exp_data.forEach(function(d) {
+		if (names.includes(d.name)) {
+			allData.push(d);
+			if (d.name in expData) {
+				expData[d.name].push(d);
+			} else {
+				expData[d.name] = [d];
+			}
+		}
+	});
+	
+	for (var name in dataset) {
+		dataset[name].sort(function(a, b) { return a.time - b.time } );
+	}
+	
+	for (var name in expData) {
+		expData[name].sort(function(a, b) { return a.time - b.time } );
+	}
+	
+	var line = d3.svg.line()
+		.x(function(d) { return x(d.time); })
+		.y(function(d) { return y(d.value); })
+		.interpolate("basis");
+		
+	x.domain(d3.extent(allData, function(d) { return d.time; }));
+	y.domain(d3.extent(allData, function(d) { return d.value; }));
+	
+	
+	// Draw permutation data
+	for (var name in dataset) {
+		chart.append("path")
+			.attr("class", "line obv-{0} obv".format(name))
+			.attr("stroke", colors(name))
+			.attr("data-legend", name)
+			.attr("d", line(dataset[name]));	
+	}
+	
+	// Draw exp data
+	for (var name in expData) {
+		chart.append("path")
+			.attr("class", "line obv-{0} obv exp".format(name))
+			.attr("stroke", colors(name))
+			.attr("data-legend", name)
+			.attr("d", line(expData[name]));	
+	}
+	
+	chart.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis);
+
+	// Add the Y Axis
+	chart.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+	
+	if (document.getElementsByClassName("legend").length == 0) {
+		legend = chart.append("g")
+			.attr("class", "legend")
+			.attr("transform","translate(0,0)")
+			.style("font-size","12px")
+			.call(d3.legend);
+	}
+		
+}
+
+function updateCB(obj) {
+	updateGraph();
+}
+
+window.onload = updateCB;
+</script>
+
+
+
+
+
+	<br>
+	{% for obv in observables %}
+		<input type="checkbox" id="{{ obv }}" class="cb" onchange="updateCB(this)" checked>{{ obv }}<br>
+	{% endfor %}
+
+
+
+	
+
+		
+	
+	
+</body>
+
+<script>
+// d3.legend.js 
+// (C) 2012 ziggy.jonsson.nyc@gmail.com
+// MIT licence
+
+(function() {
+d3.legend = function(g) {
+  g.each(function() {
+    var g= d3.select(this),
+        items = {},
+        svg = d3.select(g.property("nearestViewportElement")),
+        legendPadding = g.attr("data-style-padding") || 5,
+        lb = g.selectAll(".legend-box").data([true]),
+        li = g.selectAll(".legend-items").data([true])
+
+    lb.enter().append("rect").classed("legend-box",true)
+    li.enter().append("g").classed("legend-items",true)
+
+    svg.selectAll("[data-legend]").each(function() {
+        var self = d3.select(this)
+        items[self.attr("data-legend")] = {
+          pos : self.attr("data-legend-pos") || this.getBBox().y,
+          color : self.attr("data-legend-color") != undefined ? self.attr("data-legend-color") : self.style("fill") != 'none' ? self.style("fill") : self.style("stroke") 
+        }
+      })
+
+    items = d3.entries(items).sort(function(a,b) { return a.value.pos-b.value.pos})
+
+    
+    li.selectAll("text")
+        .data(items,function(d) { return d.key})
+        .call(function(d) { d.enter().append("text")})
+        .call(function(d) { d.exit().remove()})
+        .attr("y",function(d,i) { return i+"em"})
+        .attr("x","1em")
+        .text(function(d) { ;return d.key})
+    
+    li.selectAll("circle")
+        .data(items,function(d) { return d.key})
+        .call(function(d) { d.enter().append("circle")})
+        .call(function(d) { d.exit().remove()})
+        .attr("cy",function(d,i) { return i-0.25+"em"})
+        .attr("cx",0)
+        .attr("r","0.4em")
+        .style("fill",function(d) {return d.value.color})  
+    
+    // Reposition and resize the box
+    var lbbox = li[0][0].getBBox()  
+    lb.attr("x",(lbbox.x-legendPadding))
+        .attr("y",(lbbox.y-legendPadding))
+        .attr("height",(lbbox.height+2*legendPadding))
+        .attr("width",(lbbox.width+2*legendPadding))
+  })
+  return g
+}
+})()
+</script>

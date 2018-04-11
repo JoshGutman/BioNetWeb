@@ -41,12 +41,10 @@ def index(request):
                                                           'display_hidden': options.display_hidden})
 
         elif 'download' in request.POST:
-            print('1')
             response = HttpResponse(FileWrapper(bnglFile.getvalue(), expFile.getValue()), content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=myfile.zip'
             return response
         elif 'monsoon' in request.POST:
-            print('2') 
     return render(request, 'home/index.html')
 
 
@@ -149,7 +147,6 @@ def feedback(request):
     return render(request, 'home/feedback.html')
 
 
-
 def resources(request):
     return render(request, 'home/resources.html')
 
@@ -157,8 +154,10 @@ def resources(request):
 def to_mongo_key(filename):
     return filename.replace(".", bnw_paths.Paths.delimiter)
 
+
 def from_mongo_key(filename):
     return filename.replace(bnw_paths.Paths.delimiter, ".")
+
 
 def get_output_structure(user, project_id, output_dir):
     # output_dir should be /scratch/jng86/bnw/[username]/[time_id]/[username]_[time_id]/
@@ -194,8 +193,7 @@ def get_output_structure(user, project_id, output_dir):
 # DB method
 def set_output_structure(username, project_name, structure):
     username = to_mongo_key(username)
-    project_name = to_mongo_key(username)
-    current_level = structure
+    project_name = to_mongo_key(project_name)
     users = establish_db_connect()
     key = "projects.{}.{}".format(project_name, "output_files")
     users.update({'user': username}, {'$set': {key: structure}})
@@ -203,26 +201,35 @@ def set_output_structure(username, project_name, structure):
 
 def get_file_from_monsoon(path, user_loc):
 
-    if "output_files" not in path:
-        return ""
-    
-    start_idx = path.index("output_files") + 1
+    if "output_files" in path:
+        start_idx = path.index("output_files") + 1
+    else:
+        start_idx = 0
 
     path_to_file = "/" + os.path.join(*(user_loc.split("/") + path[start_idx:])).replace("\\", "/")
 
     # Establish SSH connection
     ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
     sftp = ssh.ssh.open_sftp()
-    contents = io.BytesIO()
-    sftp.getfo(path_to_file, contents)
+    try:
+        contents = io.BytesIO()
+        sftp.getfo(path_to_file, contents)
+    except FileNotFoundError:
+        ssh.__del__()
+        return ""
     ssh.__del__()
 
     return contents.getvalue().decode('ascii')
 
 
-
 def user(request):
     if request.method == 'POST':
+
+        if not request.user.is_authenticated:
+            return HttpResponse()
+
+        if not request.user.groups.filter(name="monsoon").exists():
+            return HttpResponse()
 
         if "type" in request.POST:
 
@@ -257,10 +264,6 @@ def user(request):
                 
                 return HttpResponse(json.dumps(file_contents))
 
-            # Visualization
-            elif request.POST.get("type") == "visualization":
-                visual_type = request.POST.get("visualization")
-                print(visual_type)
                 
 
         # User is running a job on Monsoon
@@ -338,13 +341,177 @@ def user(request):
             return HttpResponse(json.dumps("success"))
 
 
-
+    # User is viewing user page normally
     if request.user.is_authenticated:
         projects = get_projects(str(request.user))
         return render(request, 'home/user.html', {"projects": list(projects.keys())})
+
+    # User is not logged in
     else:
         return render(request, 'home/user.html')
 
+
+def get_input_file_name_by_ext(ext, username, project_name):
+    users = establish_db_connect()
+    for user in users.find({"user": to_mongo_key(username)}):
+        project = user["projects"].get(to_mongo_key(project_name), "")
+        if not project:
+            return ""
+        input_files = project["input_files"]
+    out = ""
+    for file in input_files:
+        if file.endswith("{}{}".format(bnw_paths.Paths.delimiter, ext)):
+            out = file
+            break
+    return out
+
+
+def check_exists_monsoon(fullpath):
+    bash_str = 'if [ -e {} ]; then echo "True"; else echo "False"; fi'.format(fullpath)
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    stdin, stdout, stderr = ssh.execute("pwd")
+    stdin, stdout, stderr = ssh.execute(bash_str)
+    result = stdout[1]
+    ssh.__del__()
+
+    if "True" in result:
+        return True
+    else:
+        return False
+
+
+def get_bestfit_data(gdat_path, exp_path, output_dir):
+
+    bestfit = "{}/{}".format(output_dir, bnw_paths.Paths.bestfit_data)
+    exp = "{}/{}".format(output_dir, bnw_paths.Paths.exp_data)
+    obv = "{}/{}".format(output_dir, bnw_paths.Paths.obv_names)
+
+    if not all([check_exists_monsoon(path) for path in [bestfit, exp, obv]]):
+
+        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+        stdin, stdout, stderr = ssh.execute("pwd")
+        stdin, stdout, stderr = ssh.execute("module load anaconda/3.latest")
+        stdin, stdout, stderr = ssh.execute("python {} {} {} {}".format(bnw_paths.Paths.bestfit_plot_script,
+                                                                        gdat_path,
+                                                                        exp_path,
+                                                                        output_dir))
+        if len(stderr) > 0:
+            ssh.__del__()
+            return ["", "", ""]
+
+
+    else:
+        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+        
+    #stdout.channel.recv_exit_status()
+    sftp = ssh.ssh.open_sftp()
+    try:
+        best_csv = io.BytesIO()
+        exp_csv = io.BytesIO()
+        obv_names = io.BytesIO()
+        sftp.getfo(bestfit, best_csv)
+        sftp.getfo(exp, exp_csv)
+        sftp.getfo(obv, obv_names)
+    except FileNotFoundError:
+        ssh.__del__()
+        return ["", "", ""]
+
+    tmp = [best_csv, exp_csv, obv_names]
+    return [item.getvalue().decode("ascii") for item in tmp]
+
+
+def bestfit_plot(request):
+
+    username = str(request.user)
+    project_name = str(request.GET.get("p", ""))
+
+    if not project_name or project_name == "null":
+        return render(request, "home/visualization_error.html", {"message": "The project you requested could not be located."})
+
+    output_dir = os.path.join(bnw_paths.Paths.output, username, project_name, "{}_{}".format(username, project_name)).replace("\\", "/")
+
+    bngl_name = get_input_file_name_by_ext("bngl", username, project_name)
+    gdat_name = bngl_name.split(bnw_paths.Paths.delimiter)[0] + ".gdat"
+    gdat_path = os.path.join(output_dir, gdat_name).replace("\\", "/")
+
+    exp_name = get_input_file_name_by_ext("exp", username, project_name)
+    exp_path = os.path.join(bnw_paths.Paths.output, username, project_name, from_mongo_key(exp_name)).replace("\\", "/")
+
+    best_csv, exp_csv, obv_names = get_bestfit_data(gdat_path, exp_path, output_dir)
+
+    if not all([best_csv, exp_csv, obv_names]):
+        return render(request, "home/visualization_error.html", {"message": "The appropriate files could not be found in your BioNetFit project output folder."})
+    
+    obv_names = filter(lambda obv: obv, obv_names.split("\n"))
+
+    return render(request, "home/bestfit_plot.html", {"best_data": best_csv, "exp_data": exp_csv, "observables": obv_names})
+
+
+
+def get_generational_data(exp_path, output_dir):
+    # Establish SSH connection
+
+    bestfit = "{}/{}".format(output_dir, bnw_paths.Paths.bestfit_data)
+    avg = "{}/{}".format(output_dir, bnw_paths.Paths.avg_data)
+    exp = "{}/{}".format(output_dir, bnw_paths.Paths.exp_data)
+    obv = "{}/{}".format(output_dir, bnw_paths.Paths.obv_names)
+
+    if not all([check_exists_monsoon(path) for path in [bestfit, avg, exp, obv]]):
+        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+        stdin, stdout, stderr = ssh.execute("pwd")
+        stdin, stdout, stderr = ssh.execute("module load anaconda/3.latest")
+        stdin, stdout, stderr = ssh.execute("python {} {} {}".format(bnw_paths.Paths.bestfit_plot_script,
+                                                                     exp_path,
+                                                                     output_dir))
+        if len(stderr) > 0:
+            ssh.__del__()
+            return ["", "", "", ""]
+
+    else:
+        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    
+    #stdout.channel.recv_exit_status()
+    sftp = ssh.ssh.open_sftp()
+    try:
+        best_csv = io.BytesIO()
+        avg_csv = io.BytesIO()
+        exp_csv = io.BytesIO()
+        obv_names = io.BytesIO()
+        sftp.getfo(bestfit, best_csv)
+        sftp.getfo(avg, avg_csv)
+        sftp.getfo(exp, exp_csv)
+        sftp.getfo(obv, obv_names)
+    except FileNotFoundError:
+        ssh.__del__()
+        return ["", "", "", ""]
+
+    tmp = [best_csv, avg_data, exp_csv, obv_names]
+    return [item.getvalue().decode("ascii") for item in tmp]
+
+
+def generational_plot(request):
+
+    username = str(request.user)
+    project_name = str(request.GET.get("p", ""))
+
+    if not project_name:
+        return render(request, "home/visualization_error.html", {"message": "The project you requested could not be located."})
+
+    output_dir = os.path.join(bnw_paths.Paths.output, username, project_name, "{}_{}".format(username, project_name)).replace("\\", "/")
+    exp_name = get_input_file_name_by_ext("exp", username, project_name)
+    exp_path = os.path.join(bnw_paths.Paths.output, username, project_name, from_mongo_key(exp_name)).replace("\\", "/")
+    
+    best_csv, avg_csv, exp_csv, obv_names = get_generational_data(exp_path, output_dir)
+
+    if not all([best_csv, avg_csv, exp_csv, obv_names]):
+        return render(request, "home/visualization_error.html", {"message": "The appropriate files could not be found in your BioNetFit project output folder."})
+    
+    obv_names = filter(lambda obv: obv, obv_names.split("\n"))
+    num_gens = obv_names[-1]
+    obv_names = obv_names[:-1]
+
+    return render(request, "home/generational_plot.html", {"best_data": best_csv, "avg_data": avg_csv, "exp_data": exp_csv, "max_gen": num_gens, "observables": obv_names})
+    
 
 def modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name):
     
@@ -409,4 +576,46 @@ def signup(request):
     return render(request, 'registration/signup.html', {'form': form})
 
 
+def get_project_archive(username, project_name):
+    project_path = os.path.join(bnw_paths.Paths.output, username, project_name).replace("\\", "/")
+    output = os.path.join(bnw_paths.Paths.output, username, "{}.zip".format(project_name))
+    
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    stdin, stdout, stderr = ssh.execute("pwd")
+    stdin, stdout, stderr = ssh.execute("zip {} -q -r {}".format(output, project_path))
 
+    if len(stderr) > 0:
+        ssh.__del__()
+        return ""
+
+    sftp = ssh.ssh.open_sftp()
+    try:
+        archive = io.BytesIO()
+        sftp.getfo("{}.zip".format(project_path), archive)
+    except FileNotFoundError:
+        ssh.__del__()
+        return ""
+
+    stdin, stdout, stderr = ssh.execute("rm {}".format(output))
+    ssh.__del__()
+
+    return archive
+
+
+def download_project(request):
+
+    username = str(request.user)
+    project_name = str(request.GET.get("p", ""))
+    
+    if not project_name or project_name == "null":
+        return HttpResponse()
+    
+    archive_obj = get_project_archive(username, project_name)
+
+    if not archive_obj:
+        return HttpResponse()
+
+    resp = HttpResponse(archive_obj.getvalue(), content_type="application/x-zip-compressed")
+    resp["Content-Disposition"] = "attachment; filename={}".format(project_name + ".zip")
+
+    return resp

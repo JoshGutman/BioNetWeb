@@ -41,7 +41,7 @@
 			
 				<br><br>
 			
-				<input id="submit-btn" type="submit" value="Submit" name="submit_create">
+				<input id="submit-btn" type="submit" value="Submit" name="submit_create" disabled>
 			
 			</form>
 		</div>
@@ -60,7 +60,8 @@
 				let field = document.getElementById(newId);
 				field.value = element.files[0].name;
 				
-				if (document.getElementById("bngl").files.length > 0) {
+				if (document.getElementById("bngl").files.length > 0 && 
+				    document.getElementById("exp").files.length > 0) {
 					document.getElementById("submit-btn").disabled = false;
 				} else {
 					document.getElementById("submit-btn").disabled = true;

@@ -89,7 +89,7 @@
 	
 	.visualization {
 		cursor: pointer;
-		margin-bottom: 2px;
+		margin-bottom: 1px;
 	}
 	
 </style>
@@ -118,8 +118,8 @@
 				
 				<br>
 				
-				<div style="margin-right: 5%" class="dropdown">
-					<button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Visualizations
+				<div style="margin-right: 5%; display: inline-block;" class="dropdown">
+					<button id="vis-menu" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>Visualizations
 					<span class="caret"></span></button>
 					<ul class="dropdown-menu">
 						<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
@@ -127,6 +127,7 @@
 					</ul>
 				</div>
 				
+				<button id="download-project" class="btn btn-success" type="button" disabled>Download Project
 				
 				</div> <!-- left column -->
 				
@@ -138,17 +139,22 @@
 				
 				<div class="col-md-9 col-sm-12">
 				
-					<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">File/Visualization Preview</h1>
+					<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">File Preview<span id="filename" style="display:none;">test</span></h1>
 				
-					<div id="preview" class="preview container">
+					<div id="preview" class="pt-0 mt-0 preview container-fluid" style="">
 
 						<div id="file-system">
 						
 						</div>
 						
-						<div id="file-preview" style="display: none;">
-							<button id="back-btn" type="button" class="btn btn-secondary" style="float:left;"><i class="fa fa-arrow-left" aria-hidden="true" style="font-size:100%;"></i> Back</button>
-							<div id="file-contents" style="padding-top: 15px;">
+						<div id="file-preview" style="display: none; padding: 0px; margins: 0px;">
+						
+							<div class="btn-group" role="group" style="float:left;">
+								<button id="back-btn" type="button" class="btn btn-secondary"><i class="fa fa-arrow-left fa-fw" aria-hidden="true" style="font-size:100%;"></i>Back</button>
+								<button id="download-file" type="button" class="btn btn-success"><i class="fa fa-download fa-fw" aria-hidden="true" style="font-size:100%;"></i>Download</button>
+							</div>
+							
+							<div id="file-contents" style="padding-top: 0px;">
 							
 							</div>
 						</div>
@@ -173,24 +179,46 @@
 
 <script>
 
+	var filename = "";
+
 	$(document).ready(function() {
-		$(".visualization").click(function() {
-			$.ajax({type: "POST",
-					url: "/user",
-					dataType: "json",
-					data: {type: "visualization",
-							visualization: $(this).attr("id"),
-							csrfmiddlewaretoken: '{{ csrf_token }}'},
-					success: function(response)
-						{
-							
-						}
-			});
+		$(".visualization").click(function() {	
+			var visual_type = $(this).attr("id");
+			if (visual_type == "Bestfit") {
+				var url = "/bestfit_plot?p=" + $("#projects").val();
+			} else if (visual_type == "Generational") {
+				var url = "/generational_plot?p=" + $("#projects").val();
+			} else {
+				return;
+			}
+			window.open(url);
 		});
 	});
-</script>
+	
+	$(document).ready(function() {
+		$("#download-project").click(function() {	
+			window.open("/download_project?p=" + $("#projects").val());
+		});
+	});
+	
+	$(document).ready(function() {
+		$("#download-file").click(function() {
+			download(filename, $("#file-contents").text());
+		});
+	});
+	
+	function download(filename, text) {
+		var element = document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+		element.setAttribute('download', filename);
 
-<script>
+		element.style.display = 'none';
+		document.body.appendChild(element);
+
+		element.click();
+		
+		document.body.removeChild(element);
+	}
 
 	
 	var structure = null;
@@ -219,7 +247,6 @@
 				
 	// Update the file system preview
 	function updatePreview() {
-		console.log(path);
 		var isInner = path.length == 0 ? false : true;
 	
 		var currentLevel = structure;
@@ -262,6 +289,8 @@
 							
 							$("#file-preview").css("display", "none");
 							$("#file-system").css("display", "visible");
+							$("#vis-menu").attr("disabled", false);
+							$("#download-project").attr("disabled", false);
 							
 							structure = response;
 							path = [];
@@ -307,7 +336,7 @@
 		
 			var newPath = path.slice();
 			newPath.push($(this).attr("id"));
-		
+			filename = $(this).attr("id");
 			$.ajax({type: "POST",
 					url: "/user",
 					dataType: "json",
@@ -320,6 +349,8 @@
 							$("#file-contents").html(response);
 							$("#file-system").hide();
 							$("#file-preview").show();
+							$("#filename").text(" - " + filename);
+							$("#filename").show();
 						}
 			});
 		
@@ -331,6 +362,7 @@
 		$(document).on("click", "#back-btn", function() {
 			$("#file-preview").hide();
 			$("#file-system").show();
+			$("#filename").hide();
 		});
 	});
 	
