@@ -361,8 +361,6 @@
 	// Listbox input live preview
 	$(".listbox").change(function () {
 		var oldId = $(this).attr("id");
-		console.log($(this));
-		console.log(oldId);
 		var newId = oldId + "-p";
 		var val = $(this).find(":selected").text();
 		$("#" + newId).css("display", "block");
@@ -425,7 +423,7 @@
 						"social" : "1.49", "nmin" : "80", "inertiaInit" : "1", "inertiaFinal" : "0.1" , "abs_tolerance" : "10e-4",
 						"rel_tolerance" : "10e-4", "mutate_qpso" : "1", "topology" : "fullyconnected", "pso_type" : "pso" , "synchronicity" : "true",
 						"enhanced_stop" : "false", "enhanced_inertia" : "false", "use_pipes" : "false", "divide_by_init" : "false" , "make_plots" : "true",
-						"cluster_software" : "BNF2mpi", "use_cluster" : "true", "delete_old_files" : "true", "ask_create" : "true" , "ask_overwrite" : "true",
+						"use_cluster" : "true", "delete_old_files" : "true", "ask_create" : "true" , "ask_overwrite" : "true",
 						"show_welcome_message" : "true", "min_objfunc_value" : "1"}
 	
 		var length = normalMap.length;
@@ -491,6 +489,7 @@
 		var freeFields = document.getElementsByClassName("free");
 		var normalFields = document.getElementsByClassName("normal");
 		var boolFields = document.getElementsByClassName("bool");
+		var listboxFields = document.getElementsByClassName("listbox");
 
 		for (var i = 0; i < mutateFields.length; i+=2) {
 			var name = mutateFields[i].id.split("-")[0];
