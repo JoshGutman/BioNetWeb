@@ -45,6 +45,7 @@ def index(request):
             response['Content-Disposition'] = 'attachment; filename=myfile.zip'
             return response
         elif 'monsoon' in request.POST:
+            pass
     return render(request, 'home/index.html')
 
 
