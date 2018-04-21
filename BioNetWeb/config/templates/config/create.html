@@ -1,10 +1,12 @@
 {% extends "master.html" %}
-
+{% load config_extras %}
 {% block content %}
 <script
   src="https://code.jquery.com/jquery-3.3.1.min.js"
   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
   crossorigin="anonymous"></script>
+  
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
   
 <style>
 	
@@ -57,67 +59,127 @@
 	
 	.preview {
 		background-color: #E8ECEF;
-		border-radius: 5px;
-		font-size: 18px;
-		padding-top: 10px;
+		border-radius: 0px;
+		font-size: 13px;
+		padding-top: 0px;
 		font-family: monospace;
 		color: #000;
+		max-height: 650px;
+		height: 650px;
+		overflow-y: auto;
+		overflow-x: auto;
 	}
 	
 	.preview pre {
-		font-size: 18px;
+		font-size: 13px;
 		font-family: monospace;
 	}
 	
 	.plabel {
 		display: inline-block;
-		padding-top: 20px;
+		padding-top: 10px;
 	}
 
-	.preset_list {
-     list-style-type:none;
-     margin:5px 0 0 0;
-     padding:0;
+	.dataspy {
+		position: sticky;
+		top: 10px;
+	}
+	
+	.highlight {
+		background-color: yellow;
+	}
+	
+	.modal {
+		display: none; /* Hidden by default */
+		position: fixed; /* Stay in place */
+		z-index: 9999; /* Sit on top */
+		padding-top: 100px; /* Location of the box */
+		left: 0;
+		top: 0;
+		width: 100%; /* Full width */
+		height: 100%; /* Full height */
+		overflow: auto; /* Enable scroll if needed */
+		background-color: rgb(0,0,0); /* Fallback color */
+		background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
 	}
 
-	.preset_list li {
-		float:left;
-		margin:0 5px 0 0;
-
-		width:50px;
-		height:40px;
-		position:relative;
+	/* Modal Content */
+	.modal-content {
+		position: relative;
+		background-color: #fefefe;
+		margin: auto;
+		padding: 0;
+		border: 1px solid #888;
+		width: 60%;
+		box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+		-webkit-animation-name: animatetop;
+		-webkit-animation-duration: 0.4s;
+		animation-name: animatetop;
+		animation-duration: 0.4s
+		color: black;
+	}
+	
+	.modal-content input {
+		width: 50%;
 	}
 
-	.preset_list label, .preset_list input {
-		display:block;
-		position:absolute;
-		top:0;
-		left:0;
-		right:0;
-		bottom:0;
+	/* Add Animation */
+	@-webkit-keyframes animatetop {
+		from {top:-300px; opacity:0} 
+		to {top:0; opacity:1}
 	}
 
-	.preset_list input[type="radio"] {
-		opacity:0.01;
-		z-index:100;
+	@keyframes animatetop {
+		from {top:-300px; opacity:0}
+		to {top:0; opacity:1}
 	}
 
-	.preset_list input[type="radio"]:checked + label,
-	.Checked + label {
-		background:#6e7f80;
+	/* The Close Button */
+	.close {
+		color: white;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
 	}
 
-	.preset_list label {
-		padding:5px;
-		border:1px solid #CCC; 
-		cursor:pointer;
-		z-index:90;
+	.close:hover,
+	.close:focus {
+		color: #000;
+		text-decoration: none;
+		cursor: pointer;
 	}
 
-	.preset_list label:hover {
-		background:#DDD;
+	.modal-header {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
 	}
+
+	.modal-body {
+		padding: 2px 16px;
+		color: black;
+	}
+
+	.modal-footer {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+	
+	.modal-body input {
+		width: 100%;
+	}
+	.fa-check {
+		color: green;
+	}
+	.fa-times {
+		color: red;
+	}
+	/*
+	table th {
+		border-right: 1px solid gray;
+	}
+	*/
 </style>
 
 <div class="container-fluid">
@@ -125,13 +187,105 @@
 	<div class="row">
 
 	
+	{% if user.is_authenticated and request.user|has_group:"monsoon" %}
+	
+	<div id="monsoon-confirm" class="modal">
+
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
+				<span class="close">&times;</span>
+			</div>
+			
+			<div class="modal-body">
+				<div class="container block-center">
+			
+					<table class="table">
+						<tbody>
+							<tr>
+								<th style="width: 30%" scope="row">Project Name</th>
+								<td style="width: 40%"><input id="project_name-modal" class="modal-field form-control" type="text"></td>
+								<td style="width: 15%"></td> <!-- Placeholder for submit button for uploading exp -->
+								<td class="modal-check" id="project_name-check"></td> <!-- Green checkmark for OK, Red X for not OK -->
+							</tr>
+							<tr>
+								<td style="width: 30%">Max Memory (GB)</td>
+								<td style="width: 40%"><input id="memory-modal" class="modal-field form-control" type="text"></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="memory-check"></td>
+							</tr>
+							<tr>
+								<td style="width: 30%">Max Walltime</td>
+								<td style="width: 40%"><input id="walltime-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="walltime-check"></td>
+							</tr>
+							<tr>
+								<td style="width: 30%">BNGL File</td>
+								<td style="width: 40%"><input id="bngl-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="bngl-check"></td>
+							</tr>
+							<tr>
+								<td style="width: 30%">EXP File</td>
+								<td style="width: 40%"><input id="exp-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"><input id="exp-upload" class="form-control-sm" type="file" accept=".exp" style="display: none"></td>
+								<td class="modal-check" id="exp-check"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div class="container text-center" style="padding: 10px;">
+					<button id="cancel-monsoon" class="btn btn-danger">Cancel</button>
+					<button id="submit-monsoon" class="btn btn-primary">Submit</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	
+	{% elif not request.user|has_group:"monsoon" %}
+	<div id="monsoon-confirm" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
+				<span class="close">&times;</span>
+			</div>
+			<div class="modal-body">
+				<div class="container block-center">
+					<h2>Your account has not been approved to use Monsoon.</h2>
+				</div>
+			</div>
+			<div class="modal-footer">
+			</div>
+		</div>
+	</div>
+	{% else %}
+	<div id="monsoon-confirm" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
+				<span class="close">&times;</span>
+			</div>
+			<div class="modal-body">
+				<div class="container block-center">
+					<h2>Not logged in.</h2>
+				</div>
+			</div>
+			<div class="modal-footer">
+			</div>
+		</div>
+	</div>
+	{% endif %}
 	
 	<div class="left col-md-4 col-sm-8">
 
 		<h2 id="preset-fill">Generate Default</h2>
 		<div id="preset-buttons"style="float: left">
 			<input id="genDefaults" type="button" value="Generate" name="genDefualt" onclick="genPresets(this.id)">
-			<input id="eraseDefaults" type="button" value="Erase Defualt" name="eraseDefault" onclick="erasePresets(this.id)">
+			<input id="eraseDefaults" type="button" value="Erase Default" name="eraseDefault" onclick="erasePresets(this.id)">
 		</div>
 		<br>
 		<br>
@@ -153,15 +307,7 @@
 			{% include option.input_type with label=option.name description=option.description default=option.default options=option.choices %}
 		{% endfor %}
 		
-		<div class="input-group">
-		<span class="input-group-addon">max_walltime</span>
-		<span class="tooltiptext">If a permutation is taking longer than maximum walltime, we will move on without it. Note: Many qsub systems will give your jobs lower priority as your walltime increases. Default is 01:00:00 (1 hour).</span>
-		<input class="form-control" id="max-walltime-h" type="text" placeholder="HH">
-		<span class="input-group-addon" style="min-width:0px;">:</span>
-		<input class="form-control" id="max-walltime-m" type="text" placeholder="MM">
-		<span class="input-group-addon" style="min-width:0px;">:</span>
-		<input class="form-control" id="max-walltime-s" type="text" value="00">
-		</div>
+		
 		
 		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-general">Optional parameters</button>
 		<div id="optional-general" class="collapse">
@@ -217,17 +363,6 @@
 			{% endfor %}
 		</div>
 		
-		<br>
-		<br>
-		<br>
-		<!--<form method="POST" enctype="multipart/form-data">{% csrf_token %}-->
-		<div id="buttons"style="float: left">
-			<input onclick="download('bionetfit.conf', getData())" id="download" type="submit" value="Download" name="download">
-			<input id="monsoon" type="submit" value="Monsoon" name="monsoon">
-		</div>
-		<br>
-		<br>
-		<!--</form>-->
 	</div> <!-- left column -->
 	
 	
@@ -241,11 +376,12 @@
 	
 	<div class="col-md-6 col-sm-12">
 	
-		<h2>Live Preview</h2>
+		<div class="dataspy">
+		<h2 id="preview-title">Live Preview</h2>
 	
 		<div class="preview container-fluid">
 	
-		<pre id="free-options-p">
+		<pre class="p-label" id="free-options-p">
 
 ####################
 ### Free Options ###
@@ -255,7 +391,7 @@
 			{% include "config/free_label.html" with label=o %}
 		{% endfor %}
 
-		<pre id="general-options-p">
+		<pre class="p-label" id="general-options-p">
 
 #######################
 ### General Options ###
@@ -269,7 +405,7 @@
 			{% include "config/label.html" with label=option.name %}
 		{% endfor %}
 
-		<pre id="fitting-options-p">
+		<pre class="p-label" id="fitting-options-p">
 
 #######################
 ### Fitting Options ###
@@ -283,7 +419,7 @@
 			{% include "config/label.html" with label=option.name %}
 		{% endfor %}
 		
-		<pre id="cluster-options-p">
+		<pre class="p-label" id="cluster-options-p">
 
 #######################
 ### Cluster Options ###
@@ -294,7 +430,7 @@
 		{% endfor %}
 
 
-		<pre id="path-options-p">
+		<pre class="p-label" id="path-options-p">
 
 ####################
 ### Path Options ###
@@ -305,7 +441,7 @@
 		{% endfor %}
 
 
-		<pre id="display-options-p">
+		<pre class="p-label" id="display-options-p">
 
 #######################
 ### Display Options ###
@@ -316,17 +452,28 @@
 		{% endfor %}
 		
 		
-		
-		</div>
+		<br>
+		</div> <!-- preview container -->
+		</div> <!-- dataspy container -->
 		
 	</div> <!-- right column -->
 	
-	
-	
-	
-	
 	</div> <!-- row -->
 
+	<div class="row">
+		
+		<div class="container text-center">
+			<br>
+			<br>
+			<button class="btn btn-success" onclick="download('bionetfit.conf', getData())" id="download">Download</button>
+			<button class="btn btn-primary" id="monsoon">Run on Monsoon</button>
+			<br>
+			<br>
+		</div>
+		
+</div>
+
+	
 </div> <!-- container-fluid -->
 
 
@@ -359,7 +506,7 @@
 	});
 
 	// Listbox input live preview
-	$(".listbox").change(function () {
+	$(".listbox").click(function () {
 		var oldId = $(this).attr("id");
 		var newId = oldId + "-p";
 		var val = $(this).find(":selected").text();
@@ -370,30 +517,129 @@
 	// Free input live preview
 	$(".free").keyup(function () {
 		var oldId = $(this).attr("id");
-		
 		var splitId = oldId.split("-");
+		var vartype = $("#" + splitId[0] + "-vartype").find(":selected").val();
 		
 		if (splitId[1] == "lower") {
-			var lower = $(this).val();
-			var upper = document.getElementById(splitId[0] + "-upper").value;
+			var lower = this;
+			var upper = document.getElementById(splitId[0] + "-upper")
+			var increment = document.getElementById(splitId[0] + "-increment")
+		} else if (splitId[1] == "upper") {
+			var lower = document.getElementById(splitId[0] + "-lower");
+			var upper = this;
+			var increment = document.getElementById(splitId[0] + "-increment");
 		} else {
-			var lower = document.getElementById(splitId[0] + "-lower").value;
-			var upper = $(this).val();
+			var lower = document.getElementById(splitId[0] + "-lower");
+			var upper = document.getElementById(splitId[0] + "-upper");
+			var increment = this;
+		}
+		
+		var toWrite = vartype + "=" + splitId[0] + " " + lower.value + " ";
+		if (upper.style.display != "none") {
+			toWrite += upper.value + " ";
+		}
+		if (increment.style.display != "none") {
+			toWrite += increment.value;
 		}
 				
 		var newId = splitId[0] + "-p";
-		if (lower == "" && upper == "") {
+		if (lower.value == "" && upper.value == "") {
 			$("#" + newId).css("display", "none");
 		} else {
 			$("#" + newId).css("display", "block");
-			$("#" + newId).html("loguniform_var=" + splitId[0] + "\t" + lower + "\t" + upper);
+			$("#" + newId).html(toWrite);
+		}
+	});
+	
+	// Free input var type change
+	$(".vartype").change(function() {
+		var oldId = $(this).attr("id");
+		var label = oldId.split("-")[0];
+		var increment = $("#" + label + "-increment");
+		var upper = $("#" + label + "-upper");
+				
+		var vartype = $(this).find(":selected").text();
+		if (vartype == "loguniform") {
+			increment.css("display", "none");
+			upper.css("display", "block");
+		} else if (vartype == "random") {
+			increment.css("display", "none");
+			upper.css("display", "block");
+		} else if (vartype == "lognormrandom") {
+			increment.css("display", "none");
+			upper.css("display", "block");
+		} else if (vartype == "static_list"){
+			increment.css("display", "none");
+			upper.css("display", "none");
+		}
+		
+		$("#" + label + "-lower").keyup();
+	});
+	
+	// Walltime input live preview
+	$(".walltime").keyup(function() {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+
+		if (splitId[1] == "h") {
+			var hours = $(this).val();
+			var minutes = document.getElementById(splitId[0] + "-m").value;
+			var seconds = document.getElementById(splitId[0] + "-s").value;
+		} else if (splitId[1] == "m") {
+			var hours = document.getElementById(splitId[0] + "-h").value;
+			var minutes = $(this).val();
+			var seconds = document.getElementById(splitId[0] + "-s").value;
+		} else {
+			var hours = document.getElementById(splitId[0] + "-h").value;
+			var minutes = document.getElementById(splitId[0] + "-m").value;
+			var seconds = $(this).val();
+		}
+		
+		
+		var newId = splitId[0] + "-p";
+		if (hours == "" && minutes == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html(splitId[0] + "=" + hours + ":" + minutes + ":" + seconds);
 		}
 	});
 	
 	
+	// Highlight label
+	var lastHovered = null;
+	$(".input-group").mouseover(function() {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+		var toHighlight = $("#" + splitId[0] + "-p");
+		toHighlight.addClass("highlight");
+		
+		if (toHighlight.attr("id") != lastHovered && toHighlight.css("display") != "none") {
+			// Scroll to label in live preview
+			var previewTop = $(".preview").position().top;
+			var offset = toHighlight.position().top;
+			if (offset < 0) {
+				offset = 0;
+			}
+			lastHovered = toHighlight.attr("id");
+			$(".preview").scrollTop(offset);
+		}
+	});
+	
+	// Remove highlight on label
+	$(".input-group").mouseout(function() {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+		var toHighlight = $("#" + splitId[0] + "-p");
+		toHighlight.removeClass("highlight");
+	});
+	
+	var expContents = `{{ exp }}`;
+	var expName = "{{ exp_name }}";
 	$(function() {
 		$("#monsoon").click(function() {
 
+			/*
 			var data = getData();
 			
 			
@@ -410,9 +656,140 @@
 							location.href="user"
 						}
 					});
-					
+			*/
+			$("#monsoon-confirm").css("display", "block");
+			
+			
+			// Display and check the project name (done in different function)
+			$("#project_name-modal").keyup();
+			
+			// Display and check the memory (done in different function)
+			$("#memory-modal").keyup();
+			
+			// Display and check walltime
+			var hours = $("#max_walltime-h").val();
+			var minutes = $("#max_walltime-m").val();
+			var seconds = $("#max_walltime-s").val();
+			var timeFields = [hours, minutes, seconds];
+			var timeIsValid = true;
+			for (var i = 0; i < timeFields.length; i++) {
+				for (var j = 0; j < timeFields[i].length; j++) {
+					if (timeFields[i][j] < '0' || timeFields[i][j] > '9') {
+						timeIsValid = false;
+					}
+				}
+			}
+			var walltime = hours + ":" + minutes + ":" + seconds;
+			$("#walltime-modal").val(walltime);
+			if (timeIsValid && (+hours < 336)) {	// Don't allow a job longer than 2 weeks (?)
+				$("#walltime-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			} else {
+				$("#walltime-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+			}
+			
+			// Display and check BNGL file
+			$("#bngl-modal").val("{{ bngl_name }}");
+			$("#bngl-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			
+			// Display and check EXP file
+			if ("{{ exp_name }}" != "") {
+				$("#exp-modal").val("{{ exp_name }}");
+				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			} else {
+				$("#exp-upload").css("display", "block");
+				$("#exp-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+			}
 			
 		});
+	});
+	
+	// X and Cancel buttons on monsoon confirmation popup
+	$(".close, #cancel-monsoon").click(function() {
+		$("#monsoon-confirm").css("display", "none");
+	});
+	
+	// EXP upload field in monsoon confirmation popup
+	$("#exp-upload").change(function() {
+		if ($(this).prop("files").length > 0) {
+			var filename = $(this).prop("files")[0].name;
+			var reader = new FileReader();
+			reader.readAsText($(this).prop("files")[0]);
+			reader.onload = function(evt) {
+				expContents = evt.target.result;
+				$("#exp-modal").val(filename);
+				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			};
+		}
+	});
+	
+	// Memory field check in monsoon confirmation popup
+	$("#memory-modal").keyup(function() {
+		var contents = $(this).val();
+		var isValid = true ? contents.length > 0 : false;
+		for (var i = 0; i < contents.length; i++) {
+			if (contents[i] < '0' || contents[i] > '9') {
+				isValid = false;
+			}
+		}
+		
+		if (isValid && (+contents < 100)) {	// 100 GB limit on jobs (?)
+			$("#memory-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+		} else {
+			$("#memory-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+		}
+	});
+	
+	// Project name field check in monsoon confirmation popup
+	$("#project_name-modal").keyup(function() {
+		var contents = $(this).val();
+		if (contents.match(/^[a-z0-9-]+$/i) && contents.length < 30) {	// 30 char limit (?)
+			$("#project_name-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+		} else {
+			$("#project_name-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+		}
+	});
+	
+	// Allow user to submit job if all checks pass in monsoon confirmation popup
+	$(".modal-field").on("change, keyup", function() {
+		var allFields = [$("#project_name-check"), $("#memory-check"), $("#walltime-check"), $("#bngl-check"), $("#exp-check")];
+		allPass = true;
+		for (var i = 0; i < allFields.length; i++) {
+			if (allFields[i].html() != '<i class="fa fa-check" aria-hidden="true"></i>') {
+				allPass = false;
+				break;
+			}
+		}
+		if (allPass) {
+			$("#submit-monsoon").prop("disabled", false);
+		} else {
+			$("#submit-monsoon").prop("disabled", true);
+		}
+	});
+	
+	// Submit job
+	$("#submit-monsoon").click(function() {
+		$(this).prop("disabled", true);
+		$(this).html('<i class="fa fa-gear fa-spin" aria-hidden="true"></i>');
+		var data = getData();
+		var memory = $("#memory-modal").val();
+		var walltime = $("#walltime-modal").val();
+		
+		$.ajax({type: "POST",
+				url: "/user",
+				data: {conf: data,
+					   bngl: `{{ bngl }}`,
+					   exp: expContents,
+					   bnglName: "{{ bngl_name }}",
+					   expName: expName,
+					   memory: memory,
+					   walltime: walltime,
+					   csrfmiddlewaretoken: '{{ csrf_token }}'},
+				success: function() 
+					{
+						location.href="user";
+					}
+		});
+		
 	});
 
 	function genPresets(id){
@@ -485,41 +862,11 @@
 	
 	function getData() {
 		var data = "";
-		var mutateFields = document.getElementsByClassName("mutate");
-		var freeFields = document.getElementsByClassName("free");
-		var normalFields = document.getElementsByClassName("normal");
-		var boolFields = document.getElementsByClassName("bool");
-		var listboxFields = document.getElementsByClassName("listbox");
-
-		for (var i = 0; i < mutateFields.length; i+=2) {
-			var name = mutateFields[i].id.split("-")[0];
-			data += "mutate=default" + " " + mutateFields[i].value + " " + mutateFields[i+1].value + "\n";
-		}
-			
-		for (var i = 0; i < freeFields.length; i+=2) {
-			var name = freeFields[i].id.split("-")[0];
-			data += "loguniform_var=" + name + " " + freeFields[i].value + " " + freeFields[i+1].value + "\n";
-		}
-			
-		for (var i = 0; i < normalFields.length; i++) {
-			var parent = document.getElementById(normalFields[i].id + "-p");
-			if (parent.style.display != "none") {
-				data += normalFields[i].id + "=" + normalFields[i].value + "\n"
-			}
-		}
-			
-		for (var i = 0; i < boolFields.length; i++) {
-			var parent = document.getElementById(boolFields[i].id + "-p");
-			if (parent.style.display != "none") {
-				var checked = boolFields[i].checked ? "1" : "0";
-				data += boolFields[i].id + "=" + checked + "\n";
-			}
-		}
 		
-		for (var i = 0; i < listboxFields; i++) {
-			var parent = document.getElementById(listboxFields[i].id + "-p");
-			if (parent.style.display != "none") {
-				data += boolFields[i].id + "=" + listboxFields[i][listboxFields.selectedIndex].value + "\n";
+		var fields = document.getElementsByClassName("p-label");
+		for (var i = 0; i < fields.length; i++) {
+			if (fields[i].style.display != "none") {
+				data += fields[i].textContent + "\n";
 			}
 		}
 		

@@ -20,7 +20,7 @@
 		<div style="text-align:center;">
 			<h2>Run BioNetFit in 3 easy steps:</h2>
 			<br>
-			<p>1. Upload .bngl and .exp files</p>
+			<p>1. Upload a .bngl and (optionally) an .exp file</p>
 			<p>2. Generate .conf file</p>
 			<p>3. Run BioNetFit</p>
 			<br>
@@ -60,8 +60,7 @@
 				let field = document.getElementById(newId);
 				field.value = element.files[0].name;
 				
-				if (document.getElementById("bngl").files.length > 0 && 
-				    document.getElementById("exp").files.length > 0) {
+				if (document.getElementById("bngl").files.length > 0) {
 					document.getElementById("submit-btn").disabled = false;
 				} else {
 					document.getElementById("submit-btn").disabled = true;

@@ -11,7 +11,9 @@ class Option:
         return hash(self.name)
 
 general_visible = [
+    Option("max_walltime", "config/walltime_input.html", "", "If a permutation is taking longer than maximum walltime, we will move on without it. Note: Many qsub systems will give your jobs lower priority as your walltime increases. Default is 01:00:00 (1 hour)."),
     Option('parallel_count', 'config/normal_input.html', "", 'Number of models to run simultaneously when running on a personal computer. It is recommended that this is set to the number of CPU cores present in your machine. Default is 2.'),
+    Option("population_size", "config/normal_input.html", "", "Should be set to numberof CPU cores in cluster minus 1"),
     ]
 
 
@@ -40,7 +42,6 @@ fitting_hidden = [
     Option("max_objfunc_value", "config/normal_input.html", "", "If simulation results for a given parameter value set produce a function evaluation greater than the value specified for this parameter, the parameter value set will not be used in 'breeding.' The default is no limit."),
     Option("first_gen_permutations", "config/normal_input.html", "", "Number of permutations to run in your first generation. This option allows you to start a fitting run with greater diversity. This setting will have the same value as permutations by default."),
     Option("log_transform_sim_data", "config/normal_input.html", "", "If this option is set to an integer value, all simulation output will be log transformed using the specified value as the transformation base. This transformation takes place prior to cost function evaluation."),
-    Option("population_size", "config/normal_input.html", "", "Should be set to numberof CPU cores in cluster minus 1"),
     Option("fit_type", "config/normal_input.html", "", "Here ga is genetic algorithm, de is differential evolution, sa is simulated annealing, pso is particle swarm"),
     Option("output_every", "config/normal_input.html", "", "In an asynchronous fit, output a run summary every n simulations"),
     Option("num_islands", "config/normal_input.html", "", "In Differential Evolution (de), the number of islands"),

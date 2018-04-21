@@ -23,15 +23,20 @@ def index(request):
         if 'submit_create' in request.POST:
             bngl_file = request.FILES.get('bngl', '')
             exp_file = request.FILES.get('exp', '')
+            if not bngl_file:
+                return HttpResponse()
             observables, bngl = get_free_parameters(bngl_file.file)
-            exp = get_file_contents(exp_file.file)
+
+            if exp_file:
+                exp = get_file_contents(exp_file.file)
+            else:
+                exp = ''
 
             return render(request, 'config/create.html', {'observables': observables,
                                                           'bngl': bngl,
                                                           'exp': exp,
                                                           'bngl_name': str(bngl_file),
                                                           'exp_name': str(exp_file),
-                                                          "my_options": ["option1", "option2", "option3"],
                                                           'general_visible': options.general_visible,
                                                           'general_hidden': options.general_hidden,
                                                           'fitting_visible': options.fitting_visible,
@@ -40,12 +45,7 @@ def index(request):
                                                           'path_hidden': options.path_hidden,
                                                           'display_hidden': options.display_hidden})
 
-        elif 'download' in request.POST:
-            response = HttpResponse(FileWrapper(bnglFile.getvalue(), expFile.getValue()), content_type='application/zip')
-            response['Content-Disposition'] = 'attachment; filename=myfile.zip'
-            return response
-        elif 'monsoon' in request.POST:
-            pass
+
     return render(request, 'home/index.html')
 
 
@@ -151,6 +151,12 @@ def feedback(request):
 def resources(request):
     return render(request, 'home/resources.html')
 
+def example(request):
+    if request.method == 'POST':
+        if request.POST.get('step', '') == 'create':
+            return render(request, 'home/example_create.html')
+        
+    return render(request, 'home/example.html')
 
 def to_mongo_key(filename):
     return filename.replace(".", bnw_paths.Paths.delimiter)
@@ -161,7 +167,7 @@ def from_mongo_key(filename):
 
 
 def get_output_structure(user, project_id, output_dir):
-    # output_dir should be /scratch/jng86/bnw/[username]/[time_id]/[username]_[time_id]/
+    # output_dir should be /scratch/bionetfit/bnw/[username]/[project_id]/[username]_[project_id]/
     
     ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
     stdin, stdout, stderr = ssh.execute("pwd")

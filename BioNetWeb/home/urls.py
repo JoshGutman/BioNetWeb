@@ -14,6 +14,7 @@ urlpatterns = [
     path('feedback', views.feedback, name='feedback'),
     path('resources', views.resources, name='resources'),
     path('user', views.user, name='user'),
+    path('example', views.example, name='example'),
     url(r'^bestfit_plot*$', views.bestfit_plot, name='bestfit_plot'),
     url(r'^generational_plot*$', views.generational_plot, name='generational_plot'),
     url(r'^download_project*$', views.download_project, name='download_project'),

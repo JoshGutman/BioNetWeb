@@ -1,7 +1,13 @@
-<div class="input-group">
+<div id="{{ label }}-hl" class="input-group">
 	<span class="input-group-addon">{{ label }}</span>
+	<select id="{{ label }}-vartype" class="vartype" style="font-size: 60%">
+		<option id="loguniform" value="loguniform_var">loguniform</option>
+		<option id="random" value="random_var">random</option>
+		<option id="lognormrandom" value="lognormrandom_var">lognormrandom</option>
+		<option id="lognormrandom" value="static_list_var">static_list</option>
+	</select>
 	<span class="tooltiptext">{{ description }}</span>
 	<input type="text" class="free form-control" id="{{ label }}-lower">
 	<input type="text" class="free form-control" id="{{ label }}-upper">
-	
+	<input type="text" class="free form-control" id="{{ label }}-increment" style="display: none">
 </div>
