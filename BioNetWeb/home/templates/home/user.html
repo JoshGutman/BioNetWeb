@@ -46,8 +46,8 @@
 		background-color: #E8ECEF;
 		text-align: center;
 		overflow-y: auto;
-		height: 100%;
-		max-height: 600px;
+		height: 575px;
+		max-height: 575px;
 	}
 	
 	.fa {
@@ -118,16 +118,27 @@
 				
 				<br>
 				
-				<div style="margin-right: 5%; display: inline-block;" class="dropdown">
-					<button id="vis-menu" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>Visualizations
-					<span class="caret"></span></button>
-					<ul class="dropdown-menu">
-						<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
-						<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
-					</ul>
-				</div>
+				<div class="text-center">
+					<div style="margin-right: 5%; display: inline-block;" class="dropdown">
+						<button id="vis-menu" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>Visualizations</button>
+						<span class="caret"></span></button>
+						<ul class="dropdown-menu">
+							<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
+							<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
+						</ul>
+					</div>
+					<button id="download-project" class="btn btn-success" type="button" disabled>Download Project</button>
 				
-				<button id="download-project" class="btn btn-success" type="button" disabled>Download Project
+					<br><br>
+				
+					<div class="input-group" style="width: 100%;">
+						<div class="input-group-prepend">
+							<button class="btn btn-secondary" type="button" disabled>Check Status</button>
+						</div>
+					  <input type="text" class="form-control" readonly>
+					</div>
+				
+				</div>
 				
 				</div> <!-- left column -->
 				

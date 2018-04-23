@@ -12,8 +12,8 @@ class Option:
 
 general_visible = [
     Option("max_walltime", "config/walltime_input.html", "", "If a permutation is taking longer than maximum walltime, we will move on without it. Note: Many qsub systems will give your jobs lower priority as your walltime increases. Default is 01:00:00 (1 hour)."),
-    Option('parallel_count', 'config/normal_input.html', "", 'Number of models to run simultaneously when running on a personal computer. It is recommended that this is set to the number of CPU cores present in your machine. Default is 2.'),
-    Option("population_size", "config/normal_input.html", "", "Should be set to numberof CPU cores in cluster minus 1"),
+    Option('parallel_count', 'config/normal_input.html', "2", 'Number of models to run simultaneously when running on a personal computer. It is recommended that this is set to the number of CPU cores present in your machine. Default is 2.'),
+    Option("population_size", "config/normal_input.html", "2", "Should be set to numberof CPU cores in cluster minus 1"),
     ]
 
 

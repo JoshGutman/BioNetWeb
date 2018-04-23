@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
+from . import limits
 from . import options
 from . import bnw_paths
 from . import polynomial
@@ -46,17 +47,24 @@ def index(request):
                                                           'fitting_hidden': options.fitting_hidden,
                                                           'cluster_hidden': options.cluster_hidden,
                                                           'path_hidden': options.path_hidden,
-                                                          'display_hidden': options.display_hidden})
+                                                          'display_hidden': options.display_hidden,
+                                                          'memory_limit': limits.MEMORY_LIMIT,
+                                                          'walltime_limit': limits.WALLTIME_LIMIT,
+                                                          'name_length_limit': limits.NAME_LENGTH_LIMIT,
+                                                          'parallel_count_limit': limits.PARALLEL_COUNT_LIMIT})
 
 
     return render(request, 'home/index.html')
 
 
 def add_user(username):
+    initial_time = int(time.time()) - 600
     username = to_mongo_key(username)
     users = establish_db_connect()
     users.insert({'user': str(username),
-             'projects': {}})
+                  'projects': {},
+                  'last_check': initial_time,
+                  'last_project': initial_time})
     
 
 def add_project(username, project_name):
@@ -267,19 +275,19 @@ def user(request):
 
             # Get project contents
             if request.POST.get("type") == "project":
-                time_id = request.POST["project"]
+                project_id = request.POST["project"]
                 user = str(request.user)
                 projects = get_projects(user)
                 
-                input_files = projects[time_id]["input_files"]
+                input_files = projects[project_id]["input_files"]
                 input_file_names = list(map(lambda x: from_mongo_key(x), input_files))
 
-                if not projects[time_id]["output_files"]:
-                    output_dir = os.path.join(bnw_paths.Paths.output, user, time_id, "{}_{}".format(user, time_id)).replace("\\", "/")
-                    output_structure = get_output_structure(user, time_id, output_dir)
-                    set_output_structure(user, time_id, output_structure)
+                if not projects[project_id]["output_files"]:
+                    output_dir = os.path.join(bnw_paths.Paths.output, user, project_id, "{}_{}".format(user, project_id)).replace("\\", "/")
+                    output_structure = get_output_structure(user, project_id, output_dir)
+                    set_output_structure(user, project_id, output_structure)
                            
-                return HttpResponse(json.dumps(projects[time_id]))
+                return HttpResponse(json.dumps(projects[project_id]))
 
             # Get file contents
             elif request.POST.get("type") == "file":
@@ -307,32 +315,53 @@ def user(request):
             if not request.user.groups.filter(name="monsoon").exists():
                 return HttpResponse()
             
-            # Use seconds past epoch for unique job name for now
-            time_id = str(int(time.time()))
+            # Use seconds past epoch for unique job name if project name is not valid
+            project_name = request.POST.get("projectName", "")
+            if not project_name or not project_name_is_valid(project_name):
+                project_id = str(int(time.time()))
+            else:
+                project_id = project_name
+
+            # Get and check walltime
+            walltime = request.POST.get("walltime", "")
+            if not walltime or not walltime_is_valid(walltime):
+                walltime = "01:00:00"
+            
+            # Get and check memory
+            memory = request.POST.get("memory", "")
+            if not memory or not memory_is_valid(memory):
+                memory = "8000"
+            else:
+                memory = str(int(memory) * 1000)
+
+            # Get and check parallel count
+            parallel_count = request.POST.get("parallelCount", "")
+            if not parallel_count or not parallel_count_is_valid:
+                parallel_count = "2"
             
             conf = html.unescape(request.POST.get("conf"))
             bngl = html.unescape(request.POST.get("bngl"))
             exp = html.unescape(request.POST.get("exp"))
-            conf_name = "{}.conf".format(time_id)
+            conf_name = "{}.conf".format(project_id)
             bngl_name = html.unescape(request.POST.get("bnglName"))
             exp_name = html.unescape(request.POST.get("expName"))
             
             user = str(request.user)
-            # /scratch/jng86/bnw/[user]/[unique_time_id]
-            location = os.path.join(bnw_paths.Paths.output, user, time_id).replace("\\", "/")
+            # /scratch/jng86/bnw/[user]/[unique_project_id]
+            location = os.path.join(bnw_paths.Paths.output, user, project_id).replace("\\", "/")
             bngl_loc = os.path.join(location, bngl_name).replace("\\", "/")
             exp_loc = os.path.join(location, exp_name).replace("\\", "/")
-            conf_loc = os.path.join(location, time_id + ".conf").replace("\\", "/")
-            job_name = "{}_{}".format(user, time_id)
+            conf_loc = os.path.join(location, project_id + ".conf").replace("\\", "/")
+            job_name = "{}_{}".format(user, project_id)
 
             user_loc = os.path.join(bnw_paths.Paths.output, user).replace("\\", "/")
             
-            conf = modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name)
+            conf = modify_conf(conf, project_id, location, bngl_loc, exp_loc, job_name)
 
             # TODO walltime, ntasks
-            sbatch = bnw_paths.Paths.make_sbatch(job_name, location, time_id, "12:00:00", "5", conf_loc)
+            sbatch = bnw_paths.Paths.make_sbatch(job_name, location, project_id, walltime, memory, int(parallel_count)+1, conf_loc)
 
-            sbatch_loc = os.path.join(location, time_id + ".sh").replace("\\", "/")
+            sbatch_loc = os.path.join(location, project_id + ".sh").replace("\\", "/")
 
             # Establish SSH connection
             ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
@@ -346,7 +375,7 @@ def user(request):
                 stdin, stdout, stderr = ssh.execute("mkdir {}".format(user_loc))
 
             
-            # Make time_id directory
+            # Make project_id directory
             stdin, stdout, stderr = ssh.execute("mkdir {}".format(location))
 
             sftp = ssh.ssh.open_sftp()
@@ -363,12 +392,12 @@ def user(request):
             ssh.__del__()
 
             # Add relevent data to MongoDB
-            add_project(user, time_id)
+            add_project(user, project_id)
             for filename, contents in zip(
                 map(lambda x: x.replace(".", bnw_paths.Paths.delimiter),
                     [conf_name, bngl_name, exp_name]), [conf, bngl, exp]):
-                add_input_file(user, time_id, filename, contents)
-            set_slurm_id(user, time_id, job_id)
+                add_input_file(user, project_id, filename, contents)
+            set_slurm_id(user, project_id, job_id)
 
             return HttpResponse(json.dumps("success"))
 
@@ -381,6 +410,56 @@ def user(request):
     # User is not logged in
     else:
         return render(request, 'home/user.html')
+
+
+def project_name_is_valid(project_name):
+    if len(project_name) > limits.NAME_LENGTH_LIMIT:
+        return False
+    valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-"
+    for char in project_name:
+        if char not in valid:
+            return False
+    return True
+
+
+def walltime_is_valid(walltime):
+    try:
+        wt = walltime.split(":")
+        if len(wt) != 3:
+            return False
+        for item in wt:
+            for char in item:
+                if not char.isdigit():
+                    return False
+        wt = list(map(int, wt))
+        if wt[0] < 0 or wt[0] > limits.WALLTIME_LIMIT:
+            return False
+        if wt[1] < 0 or wt[1] >=60:
+            return False
+        if wt[2] < 0 or wt[1] >= 60:
+            return False
+    except:
+        return False
+
+    return True
+
+
+def memory_is_valid(memory):
+    try:
+        mem = int(memory)
+        if mem < 0 or mem > limits.MEMORY_LIMIT:
+            return False
+    except:
+        return False
+    return True
+
+
+def parallel_count_is_valid(parallel_count):
+    if not parallel_count.isdigit():
+        return False
+    if int(parallel_count) < 1 or int(parallel_count) > limits.PARALLEL_COUNT_LIMIT:
+        return False
+    return True
 
 
 def get_input_file_name_by_ext(ext, username, project_name):
@@ -545,7 +624,7 @@ def generational_plot(request):
     return render(request, "home/generational_plot.html", {"best_data": best_csv, "avg_data": avg_csv, "exp_data": exp_csv, "max_gen": num_gens, "observables": obv_names})
     
 
-def modify_conf(conf, time_id, location, bngl_loc, exp_loc, job_name):
+def modify_conf(conf, project_id, location, bngl_loc, exp_loc, job_name):
     
     overwrite_options = {"cluster_command": "", "cluster_software": "BNF2mpi", "pe_name": "", "queue_name": "",
                          "account_name": "", "job_sleep": "", "multisim": "", "use_cluster": "1", "save_cluster_output": "",

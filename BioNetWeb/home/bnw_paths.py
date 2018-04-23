@@ -17,14 +17,14 @@ class Paths:
     delimiter = "__dot__"    # MongoDB doesn't allow "." in key names
 
 
-    def make_sbatch(name, output, time_id, walltime, ntasks, conf_loc):
+    def make_sbatch(name, output, time_id, walltime, memory, ntasks, conf_loc):
         
         sbatch = """#!/bin/bash
 #SBATCH --job-name={}
 #SBATCH --output={}/{}_output.txt
 #SBATCH --time={}
 #SBATCH --workdir={}
-#SBATCH --mem=10000
+#SBATCH --mem={}
 #SBATCH --ntasks={}
 
 
@@ -36,7 +36,7 @@ module load boost/1.65.0-gcc-5.4.0
 
 ./BioNetFit2 -a cluster -c {}
 
-""".format(name, output, time_id, walltime, Paths.bin_loc, ntasks, conf_loc)
+""".format(name, output, time_id, walltime, Paths.bin_loc, memory, ntasks, conf_loc)
 
         return sbatch
 

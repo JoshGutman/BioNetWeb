@@ -1,0 +1,4 @@
+WALLTIME_LIMIT = 336        # 2 Weeks
+MEMORY_LIMIT = 100          # 100 GB
+NAME_LENGTH_LIMIT = 30      # 30 Characters
+PARALLEL_COUNT_LIMIT = 256  # 256 tasks

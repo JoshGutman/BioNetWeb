@@ -221,6 +221,12 @@
 								<td class="modal-check" id="walltime-check"></td>
 							</tr>
 							<tr>
+								<td style="width: 30%">Parallel Count</td>
+								<td style="width: 40%"><input id="parallel_count-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="parallel_count-check"></td>
+							</tr>
+							<tr>
 								<td style="width: 30%">BNGL File</td>
 								<td style="width: 40%"><input id="bngl-modal" class="modal-field form-control" type="text" readonly></td>
 								<td style="width: 15%"></td>
@@ -230,7 +236,7 @@
 								<td style="width: 30%">EXP File</td>
 								<td style="width: 40%"><input id="exp-modal" class="modal-field form-control" type="text" readonly></td>
 								<td style="width: 15%"><input id="exp-upload_input" class="form-control-sm" type="file" accept=".exp" style="display: none">
-								<input id="exp-upload" value="Upload" class="form-control-sm col-7" type="button" style="display: none" onclick='document.getElementById("exp-upload_input").click();'></td>
+								<input id="exp-upload" value="Upload" class="form-control-sm col-8" type="button" style="display: none" onclick='document.getElementById("exp-upload_input").click();'></td>
 								<td class="modal-check" id="exp-check"></td>
 							</tr>
 						</tbody>
@@ -634,6 +640,7 @@
 
 			$("#monsoon-confirm").css("display", "block");
 			
+			$("#project_name-modal").keyup();
 			
 			// Display and check the project name (done in different function)
 			$("#project_name-modal").keyup();
@@ -656,10 +663,25 @@
 			}
 			var walltime = hours + ":" + minutes + ":" + seconds;
 			$("#walltime-modal").val(walltime);
-			if (timeIsValid && (+hours < 336)) {	// Don't allow a job longer than 2 weeks (?)
+			if (timeIsValid && (+hours < {{ walltime_limit }})) {	// Don't allow a job longer than 2 weeks (?)
 				$("#walltime-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 			} else {
 				$("#walltime-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+			}
+			
+			// Display and check parallel count
+			var parallelCount = $("#parallel_count").val();
+			$("#parallel_count-modal").val(parallelCount);
+			var pcIsValid = true;
+			for (var i = 0; i < parallelCount.length; i++) {
+				if (parallelCount[i] < '0' || parallelCount[i] > '9') {
+					pcIsValid = false;
+				}
+			}
+			if (pcIsValid && (+parallelCount < {{ parallel_count_limit }}) && (+parallelCount > 0)) {
+				$("#parallel_count-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			} else {
+				$("#parallel_count-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
 			}
 			
 			// Display and check BNGL file
@@ -694,6 +716,7 @@
 				expName = filename;
 				$("#exp-modal").val(filename);
 				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+				$("#project_name-modal").keyup();
 			};
 		}
 	});
@@ -707,8 +730,7 @@
 				isValid = false;
 			}
 		}
-		
-		if (isValid && (+contents < 100)) {	// 100 GB limit on jobs (?)
+		if (isValid && (+contents < {{ memory_limit }})) {	// 100 GB limit on jobs (?)
 			$("#memory-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 		} else {
 			$("#memory-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
@@ -718,7 +740,7 @@
 	// Project name field check in monsoon confirmation popup
 	$("#project_name-modal").keyup(function() {
 		var contents = $(this).val();
-		if (contents.match(/^[a-z0-9-]+$/i) && contents.length < 30) {	// 30 char limit (?)
+		if (contents.match(/^[a-z0-9-]+$/i) && contents.length < {{ name_length_limit }}) {	// 30 char limit (?)
 			$("#project_name-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 		} else {
 			$("#project_name-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
@@ -727,7 +749,7 @@
 	
 	// Allow user to submit job if all checks pass in monsoon confirmation popup
 	$(".modal-field").on("change, keyup", function() {
-		var allFields = [$("#project_name-check"), $("#memory-check"), $("#walltime-check"), $("#bngl-check"), $("#exp-check")];
+		var allFields = [$("#project_name-check"), $("#memory-check"), $("#walltime-check"), $("#parallel_count-check"), $("#bngl-check"), $("#exp-check")];
 		allPass = true;
 		for (var i = 0; i < allFields.length; i++) {
 			if (allFields[i].html() != '<i class="fa fa-check" aria-hidden="true"></i>') {
@@ -749,6 +771,8 @@
 		var data = getData();
 		var memory = $("#memory-modal").val();
 		var walltime = $("#walltime-modal").val();
+		var projectName = $("#project_name-modal").val()
+		var parallelCount = $("#parallel_count-modal").val();
 		
 		$.ajax({type: "POST",
 				url: "/user",
@@ -759,6 +783,8 @@
 					   expName: expName,
 					   memory: memory,
 					   walltime: walltime,
+					   projectName: projectName,
+					   parallelCount: parallelCount,
 					   csrfmiddlewaretoken: '{{ csrf_token }}'},
 				success: function() 
 					{
