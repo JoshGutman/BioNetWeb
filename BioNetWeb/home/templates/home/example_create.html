@@ -1538,85 +1538,6 @@
 	var expName = "polynomial.exp";
 	$(function() {
 		$("#monsoon").click(function() {
-
-			/*
-			var data = getData();
-			
-			
-			$.ajax({type: "POST",
-					url: "/user",
-					data: {conf: data,
-						   bngl: `begin model
-
-  begin parameters
-    # roots of 5th degree polynomial y(x)-1000
-#    r1 1
-#    r2 1.5
-#    r3 4
-#    r4 7
-#    r5 100
-#These values above are the original ones, now lets convert them to free parameters so our software will have to guess what values they are
-
-
-    r1 r1__FREE__
-    r2 r2__FREE__
-    r3 r3__FREE__
-    r4 r4__FREE__
-    r5 r5__FREE__
-	
-
-  end parameters
-
-  begin molecule types
-    counter()
-  end molecule types
-
-  begin seed species
-    # initial conditions
-    counter() 0
-  end seed species
-
-  begin observables
-    Molecules x counter()
-  end observables
-
-  begin functions
-    y()=(x-r1)*(x-r2)*(x-r3)*(x-r4)*(x-r5)+1000
-  end functions
-
-  begin reaction rules
-    0-&gt;counter() 1
-  end reaction rules
-
-end model
-
-begin actions
-  generate_network({overwrite=&gt;1})
-#  simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;10,n_steps=&gt;100,print_functions=&gt;1})
-   simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;100,n_steps=&gt;100,print_functions=&gt;1,prefix=&gt;&quot;polynomial&quot;})
-#  simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;60,sample_times=&gt;[0,5,10,15,20,25,30,35,40,45,50,55,60],prefix=&gt;&quot;exMutM1&quot;})
-
-#simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;60,sample_times=&gt;[0,5,10,15,20,25,30,35,40,45,50,55,60],prefix=&gt;&quot;exMutM1&quot;})
-
-end actions
-
-
-`,
-						   exp: `#	time	x	y
-	0	0	-3200
-	20	20	-5847960
-	40	40	-107025920
-	60	60	-409761080
-`,
-						   bnglName: "polynomial.bngl",
-						   expName: "polynomial.exp",
-						   csrfmiddlewaretoken: 'CRtc0MmhyrwCGNmd8OPBZYpWDoZ4BS9RcQAQARpf4Fd0fHLD9acZ3JVSwfc1vhhw'},
-					success: function() 
-						{
-							location.href="user"
-						}
-					});
-			*/
 			$("#monsoon-confirm").css("display", "block");
 			
 			
@@ -1737,7 +1658,7 @@ end actions
 		$.ajax({type: "POST",
 				url: "/example",
 				data: {step: "view",
-					   csrfmiddlewaretoken: 'CRtc0MmhyrwCGNmd8OPBZYpWDoZ4BS9RcQAQARpf4Fd0fHLD9acZ3JVSwfc1vhhw'},
+					   csrfmiddlewaretoken: '{{ csrf_token }}'},
 				success: function(toRender) 
 					{
 						$("#main-container").html(toRender);
