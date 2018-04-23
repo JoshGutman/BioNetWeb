@@ -1,3 +1,5 @@
+import os
+
 def read_gdat(gdat):
     out = {}
     with open(gdat, "rU") as f:
@@ -26,7 +28,7 @@ def read_exp(exp_file):
 
 
 def write_csv(data, output_dir):
-    outfile_name = "{0}/bestfit.csv".format(output_dir)
+    outfile_name = os.path.join("{0}".format(output_dir), "bestfit.csv")
     time = data["time"]
 
     with open(outfile_name, "w") as outfile:
@@ -44,14 +46,14 @@ def write_observables(data, output_dir):
         if obv == "time":
             continue
         observables.add(obv)
-    with open("{0}/obv_names.txt".format(output_dir), "w") as outfile:
+    with open(os.path.join("{0}".format(output_dir), "obv_names.txt"), "w") as outfile:
         for obv in observables:
             outfile.write(obv + "\n")
 
 
 def make_exp_csv(data, output_dir):
     times = data["time"]
-    outfile_name = "{0}/exp_data.csv".format(output_dir)
+    outfile_name = os.path.join("{0}".format(output_dir), "exp_data.csv")
 
     with open(outfile_name, "w") as outfile:
         outfile.write("name,value,time\\n")

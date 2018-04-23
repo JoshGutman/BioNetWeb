@@ -1,0 +1,1778 @@
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+<style>
+	
+	.input-group .tooltiptext {
+		display: inline-block;
+	    visibility: hidden;
+	    width: 80%;
+	    background-color: #528B8B;
+	    color: #fff;
+	    text-align: center;
+		border-radius: 6px;
+		border: 2px #2F4F4F solid;
+	    padding: 5px 5px;
+	    position: absolute;
+    	z-index: 100;
+    	top: 115%;
+    	left: 50%;
+    	margin-left: -20px;
+    	opacity: 0;
+    	transition: opacity 0.3s;
+		font-size: 70%;
+	}
+	
+	.input-group:hover .tooltiptext {
+	    visibility: visible;
+	    opacity: 1;
+	}
+	
+	.input-group-addon {
+		min-width: 150px;
+	}
+	
+	.input-group {
+		padding-bottom: 5px;
+	}
+	
+	span[name="checkbox"] {
+		min-width: 0px;
+	}
+	
+	input[type="checkbox"] {
+		width: 30px;
+		height: 30px;
+	}
+	
+	.h-hover:hover {
+		text-decoration: underline;
+		cursor: pointer;
+	}
+	
+	.preview {
+		background-color: #E8ECEF;
+		border-radius: 0px;
+		font-size: 13px;
+		padding-top: 0px;
+		font-family: monospace;
+		color: #000;
+		max-height: 650px;
+		height: 650px;
+		overflow-y: auto;
+		overflow-x: auto;
+	}
+	
+	.preview pre {
+		font-size: 13px;
+		font-family: monospace;
+	}
+	
+	.plabel {
+		display: inline-block;
+		padding-top: 10px;
+	}
+
+	.dataspy {
+		position: sticky;
+		top: 10px;
+	}
+	
+	.highlight {
+		background-color: yellow;
+	}
+	
+	.modal {
+		display: none; /* Hidden by default */
+		position: fixed; /* Stay in place */
+		z-index: 9999; /* Sit on top */
+		padding-top: 100px; /* Location of the box */
+		left: 0;
+		top: 0;
+		width: 100%; /* Full width */
+		height: 100%; /* Full height */
+		overflow: auto; /* Enable scroll if needed */
+		background-color: rgb(0,0,0); /* Fallback color */
+		background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+	}
+
+	/* Modal Content */
+	.modal-content {
+		position: relative;
+		background-color: #fefefe;
+		margin: auto;
+		padding: 0;
+		border: 1px solid #888;
+		width: 60%;
+		box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+		-webkit-animation-name: animatetop;
+		-webkit-animation-duration: 0.4s;
+		animation-name: animatetop;
+		animation-duration: 0.4s
+		color: black;
+	}
+	
+	.modal-content input {
+		width: 50%;
+	}
+
+	/* Add Animation */
+	@-webkit-keyframes animatetop {
+		from {top:-300px; opacity:0} 
+		to {top:0; opacity:1}
+	}
+
+	@keyframes animatetop {
+		from {top:-300px; opacity:0}
+		to {top:0; opacity:1}
+	}
+
+	/* The Close Button */
+	.close {
+		color: white;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	}
+
+	.close:hover,
+	.close:focus {
+		color: #000;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.modal-header {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+
+	.modal-body {
+		padding: 2px 16px;
+		color: black;
+	}
+
+	.modal-footer {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+	
+	.modal-body input {
+		width: 100%;
+	}
+	.fa-check {
+		color: green;
+	}
+	.fa-times {
+		color: red;
+	}
+	#create-info {
+		display: block;
+		font-size: 80%;
+	}
+	#create-info p {
+		text-indent: 4%;
+	}
+	/*
+	table th {
+		border-right: 1px solid gray;
+	}
+	*/
+</style>
+
+<div class="container-fluid">
+
+	<div class="row">
+
+	<div id="create-info" class="modal">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 style="padding: 5px;">Configuration File Creation</h2>
+				<span class="close-info">&times;</span>
+			</div>
+			<div class="modal-body">
+				<div class="container block-center">
+					<p>This is the configuration file creation tool. Here, you can create a .conf file from a template. The free parameters were collected from the uploaded .bngl file and are now displayed under the <i>Free Options</i> section.<p/> 
+					<p>Once you are done filling out the configuration information, you can either download the file you just created, or run BioNetFit on Monsoon. When you choose to run a project on Monsoon, a submission popup will appear, where you can enter the title, max memory usage, and other metadata about the project. For the purposes of this demonstration, the values you will fill out will be overwritten. </p>
+					<p>In a real situation, some data will still be overwritten.  The three collapsed sections (<i>Cluster Options</i>, <i>Path Options</i>, <i>Display Options</i>) will be overwritten so that the project can be run on Monsoon.  Downloading the file will not overwrite these values, however.</p>
+					<p><b>When you are ready to go on to the next step, run the project on Monsoon.</b>  Don't worry about filling in the correct values -- they will be overwritten automatically when you proceed to the next step.</p>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div class="container text-center" style="padding: 10px;">
+					<button class="btn btn-primary close-info" style="width: 6em">Ok</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	
+	<div id="monsoon-confirm" class="modal">
+
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
+				<span class="close">&times;</span>
+			</div>
+			
+			<div class="modal-body">
+				<div class="container block-center">
+			
+					<table class="table">
+						<tbody>
+							<tr>
+								<th style="width: 30%" scope="row">Project Name</th>
+								<td style="width: 40%"><input id="project_name-modal" class="modal-field form-control" type="text"></td>
+								<td style="width: 15%"></td> <!-- Placeholder for submit button for uploading exp -->
+								<td class="modal-check" id="project_name-check"></td> <!-- Green checkmark for OK, Red X for not OK -->
+							</tr>
+							<tr>
+								<td style="width: 30%">Max Memory (GB)</td>
+								<td style="width: 40%"><input id="memory-modal" class="modal-field form-control" type="text"></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="memory-check"></td>
+							</tr>
+							<tr>
+								<td style="width: 30%">Max Walltime</td>
+								<td style="width: 40%"><input id="walltime-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="walltime-check"></td>
+							</tr>
+							<tr>
+								<td style="width: 30%">BNGL File</td>
+								<td style="width: 40%"><input id="bngl-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"></td>
+								<td class="modal-check" id="bngl-check"></td>
+							</tr>
+							<tr>
+								<td style="width: 30%">EXP File</td>
+								<td style="width: 40%"><input id="exp-modal" class="modal-field form-control" type="text" readonly></td>
+								<td style="width: 15%"><input id="exp-upload" class="form-control-sm" type="file" accept=".exp" style="display: none"></td>
+								<td class="modal-check" id="exp-check"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div class="container text-center" style="padding: 10px;">
+					<button id="cancel-monsoon" class="btn btn-danger">Cancel</button>
+					<button id="submit-monsoon" class="btn btn-primary">Submit</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	
+	
+	
+	<div class="left col-md-4 col-sm-8">
+
+		<h2 id="free-options">Free Options</h2>
+		
+		
+			
+				<div id="r1-hl" class="input-group">
+	<span class="input-group-addon">r1</span>
+	<select id="r1-vartype" class="vartype" style="font-size: 60%">
+		<option id="loguniform" value="loguniform_var">loguniform</option>
+		<option id="random" value="random_var">random</option>
+		<option id="lognormrandom" value="lognormrandom_var">lognormrandom</option>
+		<option id="lognormrandom" value="static_list_var">static_list</option>
+	</select>
+	<span class="tooltiptext">free observable</span>
+	<input type="text" class="free form-control" id="r1-lower">
+	<input type="text" class="free form-control" id="r1-upper">
+	<input type="text" class="free form-control" id="r1-increment" style="display: none">
+</div>
+			
+				<div id="r2-hl" class="input-group">
+	<span class="input-group-addon">r2</span>
+	<select id="r2-vartype" class="vartype" style="font-size: 60%">
+		<option id="loguniform" value="loguniform_var">loguniform</option>
+		<option id="random" value="random_var">random</option>
+		<option id="lognormrandom" value="lognormrandom_var">lognormrandom</option>
+		<option id="lognormrandom" value="static_list_var">static_list</option>
+	</select>
+	<span class="tooltiptext">free observable</span>
+	<input type="text" class="free form-control" id="r2-lower">
+	<input type="text" class="free form-control" id="r2-upper">
+	<input type="text" class="free form-control" id="r2-increment" style="display: none">
+</div>
+			
+				<div id="r3-hl" class="input-group">
+	<span class="input-group-addon">r3</span>
+	<select id="r3-vartype" class="vartype" style="font-size: 60%">
+		<option id="loguniform" value="loguniform_var">loguniform</option>
+		<option id="random" value="random_var">random</option>
+		<option id="lognormrandom" value="lognormrandom_var">lognormrandom</option>
+		<option id="lognormrandom" value="static_list_var">static_list</option>
+	</select>
+	<span class="tooltiptext">free observable</span>
+	<input type="text" class="free form-control" id="r3-lower">
+	<input type="text" class="free form-control" id="r3-upper">
+	<input type="text" class="free form-control" id="r3-increment" style="display: none">
+</div>
+			
+				<div id="r4-hl" class="input-group">
+	<span class="input-group-addon">r4</span>
+	<select id="r4-vartype" class="vartype" style="font-size: 60%">
+		<option id="loguniform" value="loguniform_var">loguniform</option>
+		<option id="random" value="random_var">random</option>
+		<option id="lognormrandom" value="lognormrandom_var">lognormrandom</option>
+		<option id="lognormrandom" value="static_list_var">static_list</option>
+	</select>
+	<span class="tooltiptext">free observable</span>
+	<input type="text" class="free form-control" id="r4-lower">
+	<input type="text" class="free form-control" id="r4-upper">
+	<input type="text" class="free form-control" id="r4-increment" style="display: none">
+</div>
+			
+				<div id="r5-hl" class="input-group">
+	<span class="input-group-addon">r5</span>
+	<select id="r5-vartype" class="vartype" style="font-size: 60%">
+		<option id="loguniform" value="loguniform_var">loguniform</option>
+		<option id="random" value="random_var">random</option>
+		<option id="lognormrandom" value="lognormrandom_var">lognormrandom</option>
+		<option id="lognormrandom" value="static_list_var">static_list</option>
+	</select>
+	<span class="tooltiptext">free observable</span>
+	<input type="text" class="free form-control" id="r5-lower">
+	<input type="text" class="free form-control" id="r5-upper">
+	<input type="text" class="free form-control" id="r5-increment" style="display: none">
+</div>
+			
+		
+		
+		<br>
+		<br>
+		
+		<h2>General Options</h2>
+		
+		
+			<div id="max_walltime-hl" class="input-group">
+	<span class="input-group-addon">max_walltime</span>
+	<span class="tooltiptext">If a permutation is taking longer than maximum walltime, we will move on without it. Note: Many qsub systems will give your jobs lower priority as your walltime increases. Default is 01:00:00 (1 hour).</span>
+	<input class="walltime form-control" id="max_walltime-h" type="text" value="1">
+	<span class="input-group-addon" style="min-width:0px;">:</span>
+	<input class="walltime form-control" id="max_walltime-m" type="text" value="00">
+	<span class="input-group-addon" style="min-width:0px;">:</span>
+	<input class="walltime form-control" id="max_walltime-s" type="text" value="00">
+</div>
+		
+			<div id="parallel_count-hl" class="input-group">
+	<span class="input-group-addon">parallel_count</span>
+	<span class="tooltiptext">Number of models to run simultaneously when running on a personal computer. It is recommended that this is set to the number of CPU cores present in your machine. Default is 2.</span>
+	<input type="text" class="normal form-control" id="parallel_count" value="">
+</div>
+		
+			<div id="population_size-hl" class="input-group">
+	<span class="input-group-addon">population_size</span>
+	<span class="tooltiptext">Should be set to numberof CPU cores in cluster minus 1</span>
+	<input type="text" class="normal form-control" id="population_size" value="">
+</div>
+		
+		
+		
+		
+		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-general">Optional parameters</button>
+		<div id="optional-general" class="collapse">
+			
+				<div id="seed-hl" class="input-group">
+	<span class="input-group-addon">seed</span>
+	<span class="tooltiptext">Seed for BioNetFit&#39;s random number generator.  Comment this option out in order to use a different seed every time. Note: This seed only applies to BioNetFit&#39;s random number generator. It does not affect NFsim or BioNetGen. To give NFsim a seed, set seed=### in your simulation command or .rnf file. Default is no user-specified seed (i.e.,the seed is determined automatically).</span>
+	<input type="text" class="normal form-control" id="seed" value="">
+</div>
+			
+				<div id="max_retries-hl" class="input-group">
+	<span class="input-group-addon">max_retries</span>
+	<span class="tooltiptext">Sometimes a generation must be re-run because there were too many simulations which did not finish successfully.  This often happens because they hit the specified maximum walltime. max_retries is the number of times a generation will be run before BioNetFit gives up. Default is 3.</span>
+	<input type="text" class="normal form-control" id="max_retries" value="3">
+</div>
+			
+				<div id="make_plots-hl" class="input-group">
+	<span class="input-group-addon">make_plots</span>
+	<span class="tooltiptext">Whether or not BioNetFit will output plots when results are ready. Default is 0.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="make_plots">
+	
+	</span>
+</div>
+			
+				<div id="delete_old_files-hl" class="input-group">
+	<span class="input-group-addon">delete_old_files</span>
+	<span class="tooltiptext">BioNetFit results can use a lot of disk space.  Enabling this option will delete unnecessary files (.net, .bngl, .xml, .cdat, etc) as a run progresses. We note that if this option is turned on, BioNetFit may not be able to supply you with a model or .net file containing best-fit parameters at the end of the fitting run.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="delete_old_files">
+	
+	</span>
+</div>
+			
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2>Fitting Options</h2>
+		
+			<div id="max_generations-hl" class="input-group">
+	<span class="input-group-addon">max_generations</span>
+	<span class="tooltiptext">The maximum number of iterations or generations (Gmax). BioNetFit will execute this number of generations unless it quits earlier due to satisfaction of a stopping condition.</span>
+	<input type="text" class="normal form-control" id="max_generations" value="">
+</div>
+		
+			<div id="permutations-hl" class="input-group">
+	<span class="input-group-addon">permutations</span>
+	<span class="tooltiptext">The number of parameter value sets or population size or number of permutations (N). At each iteration, N simulation jobs will be performed.</span>
+	<input type="text" class="normal form-control" id="permutations" value="">
+</div>
+		
+		
+		<button class="dropdown-toggle btn-sm btn-secondary" data-toggle="collapse" data-target="#optional-fitting">Optional parameters</button>
+		<div id="optional-fitting" class="collapse">
+			<div id="mutate-hl" class="input-group">
+	<span class="input-group-addon">mutate</span>
+	<span class="tooltiptext">This option is used to identify a free parameter. It has three arguments. The first is a parameter identifier or parameter name. We recommend that parameter identifiers such as p__FREE__be used rather than parameter names such as p. See Section IV.B.3 in http://bionetfit.nau.edu/files/BioNetFit_User_Manual.pdf. The second argument is the 'mutation' rate (Q2). This quantity is a probability and therefore it must take values between 0 and 1. The third argument sets a range in which a factor will fall. This factor multiplies the old value of a parameter to obtain a new 'mutated' value of the parameter. The factor is chosen randomly. It is a uniform random deviate U that lies between 1 -arg3 and 1 + arg3, where arg3 is the user-specified value of the third argument. In other words, p_new = p_old*U = </span>
+	<input type="text" class="mutate form-control" id="mutate-lower">
+	<input type="text" class="mutate form-control" id="mutate-upper">
+	
+</div>
+			
+				<div id="smoothing-hl" class="input-group">
+	<span class="input-group-addon">smoothing</span>
+	<span class="tooltiptext">Number of replicate simulation runs. The default value is 1. Multiple simulation runs are useful for smoothing the results of stochastic simulation. NB: Setting this parameter to 10 will increase the cost of simulation by an order of magnitude.</span>
+	<input type="text" class="normal form-control" id="smoothing" value="1">
+</div>
+			
+				<div id="objfunc-hl" class="input-group">
+	<span class="input-group-addon">objfunc</span>
+	<span class="tooltiptext">y(x)= measured value at condition x y[prime](x)= simulated value at condition x The objective function is a sum of terms over all x values. The terms can have the forms indicated below: 1:(y(x)-y[prime](x))[squared] 2: ((y(x)-y[prime](x))/y_SD(x))[squared] 3:((y(x)-y[prime](x))/y(x))[squared] 4:((y(x)-y[prime](x))/ybar)[squared] The objective function is selected by setting objfunc to one of the index values above. A setting of objfunc=1 indicates that the objective function is the sum-of-squares function (i.e., nonlinear least squares fitting). A setting of objfunc=2 indicates that the objective function is the chi-square function (i.e., weighted nonlinear least squares fitting). For this option, y values in .exp files must be accompanied by y_SD values. The default setting is 1.</span>
+	<select id="objfunc" class="listbox">
+		
+			
+				<option id="objfunc" value="1" selected>1</option>
+			
+		
+			
+				<option id="objfunc" value="2">2</option>
+			
+		
+			
+				<option id="objfunc" value="3">3</option>
+			
+		
+			
+				<option id="objfunc" value="4">4</option>
+			
+		
+	</select>
+</div>
+			
+				<div id="extra_weight-hl" class="input-group">
+	<span class="input-group-addon">extra_weight</span>
+	<span class="tooltiptext">When selecting parents to breed, they are already weighted such that runs with better goodness-of-fit are more likely to be chosen. If you would like to weight the selection even more, increase this value. Note that more weight will make it less likely that different parents will be selected for breeding. Note: Values must be in the range 0-10. Default value is 0.</span>
+	<select id="extra_weight" class="listbox">
+		
+			
+				<option id="extra_weight" value="0" selected>0</option>
+			
+		
+			
+				<option id="extra_weight" value="1">1</option>
+			
+		
+			
+				<option id="extra_weight" value="2">2</option>
+			
+		
+			
+				<option id="extra_weight" value="3">3</option>
+			
+		
+			
+				<option id="extra_weight" value="4">4</option>
+			
+		
+			
+				<option id="extra_weight" value="5">5</option>
+			
+		
+			
+				<option id="extra_weight" value="6">6</option>
+			
+		
+			
+				<option id="extra_weight" value="7">7</option>
+			
+		
+			
+				<option id="extra_weight" value="8">8</option>
+			
+		
+			
+				<option id="extra_weight" value="9">9</option>
+			
+		
+			
+				<option id="extra_weight" value="10">10</option>
+			
+		
+	</select>
+</div>
+			
+				<div id="swap_rate-hl" class="input-group">
+	<span class="input-group-addon">swap_rate</span>
+	<span class="tooltiptext">This parameter sets the &#39;recombination&#39; rate (Q1). It is a probability, so values must be between 0 and 1. The default settingis 0.5.</span>
+	<input type="text" class="normal form-control" id="swap_rate" value="0.5">
+</div>
+			
+				<div id="max_parents-hl" class="input-group">
+	<span class="input-group-addon">max_parents</span>
+	<span class="tooltiptext">This parameter sets the maximum number of &#39;parents&#39; to be used in &#39;breeding.&#39; By default, this parameter is equal to the population size (N).</span>
+	<input type="text" class="normal form-control" id="max_parents" value="">
+</div>
+			
+				<div id="keep_parents-hl" class="input-group">
+	<span class="input-group-addon">keep_parents</span>
+	<span class="tooltiptext">This parameter determines the number of top-ranked parents (parameter value sets) that will be carried over to the next iteration. Default is 0.</span>
+	<input type="text" class="normal form-control" id="keep_parents" value="0">
+</div>
+			
+				<div id="min_objfunc_value-hl" class="input-group">
+	<span class="input-group-addon">min_objfunc_value</span>
+	<span class="tooltiptext">If simulation results for a given parameter value set produce a function evaluation less than the value specified for this parameter, fitting will stop. The default is no stopping condition (i.e., this parameter is set to 0).</span>
+	<input type="text" class="normal form-control" id="min_objfunc_value" value="0">
+</div>
+			
+				<div id="max_objfunc_value-hl" class="input-group">
+	<span class="input-group-addon">max_objfunc_value</span>
+	<span class="tooltiptext">If simulation results for a given parameter value set produce a function evaluation greater than the value specified for this parameter, the parameter value set will not be used in &#39;breeding.&#39; The default is no limit.</span>
+	<input type="text" class="normal form-control" id="max_objfunc_value" value="">
+</div>
+			
+				<div id="first_gen_permutations-hl" class="input-group">
+	<span class="input-group-addon">first_gen_permutations</span>
+	<span class="tooltiptext">Number of permutations to run in your first generation. This option allows you to start a fitting run with greater diversity. This setting will have the same value as permutations by default.</span>
+	<input type="text" class="normal form-control" id="first_gen_permutations" value="">
+</div>
+			
+				<div id="log_transform_sim_data-hl" class="input-group">
+	<span class="input-group-addon">log_transform_sim_data</span>
+	<span class="tooltiptext">If this option is set to an integer value, all simulation output will be log transformed using the specified value as the transformation base. This transformation takes place prior to cost function evaluation.</span>
+	<input type="text" class="normal form-control" id="log_transform_sim_data" value="">
+</div>
+			
+				<div id="fit_type-hl" class="input-group">
+	<span class="input-group-addon">fit_type</span>
+	<span class="tooltiptext">Here ga is genetic algorithm, de is differential evolution, sa is simulated annealing, pso is particle swarm</span>
+	<input type="text" class="normal form-control" id="fit_type" value="">
+</div>
+			
+				<div id="output_every-hl" class="input-group">
+	<span class="input-group-addon">output_every</span>
+	<span class="tooltiptext">In an asynchronous fit, output a run summary every n simulations</span>
+	<input type="text" class="normal form-control" id="output_every" value="">
+</div>
+			
+				<div id="num_islands-hl" class="input-group">
+	<span class="input-group-addon">num_islands</span>
+	<span class="tooltiptext">In Differential Evolution (de), the number of islands</span>
+	<input type="text" class="normal form-control" id="num_islands" value="">
+</div>
+			
+				<div id="mutate_type-hl" class="input-group">
+	<span class="input-group-addon">mutate_type</span>
+	<span class="tooltiptext">In (differential evolution) DE and (simulated annealing) SA, the mutation type, such as [4]</span>
+	<input type="text" class="normal form-control" id="mutate_type" value="">
+</div>
+			
+				<div id="cr-hl" class="input-group">
+	<span class="input-group-addon">cr</span>
+	<span class="tooltiptext">In (differential evolution) DE and (simulated annealing) SA, the crossover rate</span>
+	<input type="text" class="normal form-control" id="cr" value="">
+</div>
+			
+				<div id="migration_frequency-hl" class="input-group">
+	<span class="input-group-addon">migration_frequency</span>
+	<span class="tooltiptext">In (differential evolution) DE, how often particles migrate between islands</span>
+	<input type="text" class="normal form-control" id="migration_frequency" value="">
+</div>
+			
+				<div id="num_to_migrate-hl" class="input-group">
+	<span class="input-group-addon">num_to_migrate</span>
+	<span class="tooltiptext">In (differential evolution) DE, how many points to migrate during crossover</span>
+	<input type="text" class="normal form-control" id="num_to_migrate" value="">
+</div>
+			
+				<div id="inertia-hl" class="input-group">
+	<span class="input-group-addon">inertia</span>
+	<span class="tooltiptext">In (particle swarm) PSO, the inertia</span>
+	<input type="text" class="normal form-control" id="inertia" value="">
+</div>
+			
+				<div id="cognitive-hl" class="input-group">
+	<span class="input-group-addon">cognitive</span>
+	<span class="tooltiptext">In (particle swarm) PSO, the cognitive factor</span>
+	<input type="text" class="normal form-control" id="cognitive" value="">
+</div>
+			
+				<div id="social-hl" class="input-group">
+	<span class="input-group-addon">social</span>
+	<span class="tooltiptext">The social factor in PSO</span>
+	<input type="text" class="normal form-control" id="social" value="">
+</div>
+			
+				<div id="nmin-hl" class="input-group">
+	<span class="input-group-addon">nmin</span>
+	<span class="tooltiptext">[nmax is 20, thus nmin is 80]?</span>
+	<input type="text" class="normal form-control" id="nmin" value="">
+</div>
+			
+				<div id="nmax-hl" class="input-group">
+	<span class="input-group-addon">nmax</span>
+	<span class="tooltiptext">[nmax is 20, thus nmin is 80]?</span>
+	<input type="text" class="normal form-control" id="nmax" value="">
+</div>
+			
+				<div id="inertiaInit-hl" class="input-group">
+	<span class="input-group-addon">inertiaInit</span>
+	<span class="tooltiptext">In enhanced inertia, the initial inertia [i.e. is 1]</span>
+	<input type="text" class="normal form-control" id="inertiaInit" value="">
+</div>
+			
+				<div id="inertiaFinal-hl" class="input-group">
+	<span class="input-group-addon">inertiaFinal</span>
+	<span class="tooltiptext">In enhanced inertia, the final inertia [i.e. is 0.1]</span>
+	<input type="text" class="normal form-control" id="inertiaFinal" value="">
+</div>
+			
+				<div id="abs_tolerance-hl" class="input-group">
+	<span class="input-group-addon">abs_tolerance</span>
+	<span class="tooltiptext">Tolerances for enhanced (particle swarm) PSO stop [i.e. 10e-4]</span>
+	<input type="text" class="normal form-control" id="abs_tolerance" value="">
+</div>
+			
+				<div id="rel_tolerance-hl" class="input-group">
+	<span class="input-group-addon">rel_tolerance</span>
+	<span class="tooltiptext">Tolerances for enhanced (particle swarm) PSO stop [i.e. 10e-4]</span>
+	<input type="text" class="normal form-control" id="rel_tolerance" value="">
+</div>
+			
+				<div id="mutate_qpso-hl" class="input-group">
+	<span class="input-group-addon">mutate_qpso</span>
+	<span class="tooltiptext">Whether or not to enable mutations in QPSO</span>
+	<input type="text" class="normal form-control" id="mutate_qpso" value="">
+</div>
+			
+				<div id="topology-hl" class="input-group">
+	<span class="input-group-addon">topology</span>
+	<span class="tooltiptext">Swarm tolopogy in particle swarm or island migration topology in differential evolution can be either ring or toroidal or star or fullyconnected or mesh or tree</span>
+	<input type="text" class="normal form-control" id="topology" value="">
+</div>
+			
+				<div id="pso_type-hl" class="input-group">
+	<span class="input-group-addon">pso_type</span>
+	<span class="tooltiptext">PSO (particle swarm) variant, can be bbpso, bbpsoexp, pso (normal pso), qpso (quantum behaved particle swarm)</span>
+	<input type="text" class="normal form-control" id="pso_type" value="">
+</div>
+			
+				<div id="synchronicity-hl" class="input-group">
+	<span class="input-group-addon">synchronicity</span>
+	<span class="tooltiptext">1/0 is synchronous/asynchronous</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="synchronicity">
+	
+	</span>
+</div>
+			
+				<div id="enhanced_stop-hl" class="input-group">
+	<span class="input-group-addon">enhanced_stop</span>
+	<span class="tooltiptext">Whether or not to use enhanced stop criteria in PSO (not sure if this works well)</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="enhanced_stop">
+	
+	</span>
+</div>
+			
+				<div id="enhanced_inertia-hl" class="input-group">
+	<span class="input-group-addon">enhanced_inertia</span>
+	<span class="tooltiptext">Whether or not to use enhanced inertia in PSO</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="enhanced_inertia">
+	
+	</span>
+</div>
+			
+				<div id="use_pipes-hl" class="input-group">
+	<span class="input-group-addon">use_pipes</span>
+	<span class="tooltiptext">checked to run in windows, pipes</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="use_pipes">
+	
+	</span>
+</div>
+			
+				<div id="divide_by_init-hl" class="input-group">
+	<span class="input-group-addon">divide_by_init</span>
+	<span class="tooltiptext">This option instructs BioNetFit, before cost function evaluation, to divide each model output by the first listed value of the output in the .gdat (or .scan) file, i.e., by the top numerical value in the .gdat (or .scan) file. This feature is useful when the first value listed is, for example, the basal steady-state value and the experimental data being used in fitting consists of fold-change measurements made relative to the basal steady state.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="divide_by_init">
+	
+	</span>
+</div>
+			
+				<div id="stop_when_stalled-hl" class="input-group">
+	<span class="input-group-addon">stop_when_stalled</span>
+	<span class="tooltiptext">If this parameter is set to 1 (default setting) BioNetFit will stop the fitting run if new parameter value sets are identical to old parameter value sets after &#39;breeding.&#39; This situation would only be expected to arise if the rate of &#39;mutation&#39; is set to 0.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="stop_when_stalled" checked>
+	
+	</span>
+</div>
+			
+				<div id="standardize_sim_data-hl" class="input-group">
+	<span class="input-group-addon">standardize_sim_data</span>
+	<span class="tooltiptext">This option instructs BioNetFit to standardize simulation output to a mean of 0, using the following formula: &lt;y[x] = [y[x] minus ybar] / stdev[y]&gt; This standardization happens prior to cost function evaluation.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="standardize_sim_data">
+	
+	</span>
+</div>
+			
+				<div id="standardize_exp_data-hl" class="input-group">
+	<span class="input-group-addon">standardize_exp_data</span>
+	<span class="tooltiptext">Similar to the above option, but in regards to experimental data (.exp file).</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="standardize_exp_data">
+	
+	</span>
+</div>
+			
+				<div id="force_different_parents-hl" class="input-group">
+	<span class="input-group-addon">force_different_parents</span>
+	<span class="tooltiptext">This parameter determines whether a &#39;parent&#39; is allowed to &#39;breed&#39; with itself. If self-breeding is allowed, some parameter value sets may be unchanged from iteration to iteration. The default setting is 1.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="force_different_parents" checked>
+	
+	</span>
+</div>
+			
+			
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#cluster-options">Cluster Options</h2>
+		<div id="cluster-options" class="collapse">
+			
+				<div id="cluster_command-hl" class="input-group">
+	<span class="input-group-addon">cluster_command</span>
+	<span class="tooltiptext">The user may specify the command to be used to submit a job for processing. However, in most cases, this is not necessary. BioNetFit is designed to automatically determine which command to use. Acceptable options are limited to &#39;sbatch&#39; and &#39;qsub.&#39;</span>
+	<select id="cluster_command" class="listbox">
+		
+			
+				<option id="cluster_command" value="sbatch">sbatch</option>
+			
+		
+			
+				<option id="cluster_command" value="qsub">qsub</option>
+			
+		
+	</select>
+</div>
+			
+				<div id="cluster_software-hl" class="input-group">
+	<span class="input-group-addon">cluster_software</span>
+	<span class="tooltiptext">The user may specify the cluster platform being used. However, in most cases, this is not necessary. BioNetFit is designed to automatically determine which cluster platform is being used. Acceptable options are &#39;slurm,&#39; &#39;torque,&#39; and &#39;ge.&#39;</span>
+	<select id="cluster_software" class="listbox">
+		
+			
+				<option id="cluster_software" value="slurm">slurm</option>
+			
+		
+			
+				<option id="cluster_software" value="torque">torque</option>
+			
+		
+			
+				<option id="cluster_software" value="ge">ge</option>
+			
+		
+			
+				<option id="cluster_software" value="BNF2mpi">BNF2mpi</option>
+			
+		
+	</select>
+</div>
+			
+				<div id="pe_name-hl" class="input-group">
+	<span class="input-group-addon">pe_name</span>
+	<span class="tooltiptext">The user may specify the parallel environment being used on the cluster. This is generally necessary on an SGE-based cluster. In general, this setting must be obtained from the cluster administrator; however, a typical setting is &#39;orte.&#39;</span>
+	<input type="text" class="normal form-control" id="pe_name" value="">
+</div>
+			
+				<div id="queue_name-hl" class="input-group">
+	<span class="input-group-addon">queue_name</span>
+	<span class="tooltiptext">The user may specify the work queue being used on the cluster. In general, this setting must be obtained from the cluster administrator; however, a typical setting is &#39;all.&#39;</span>
+	<input type="text" class="normal form-control" id="queue_name" value="">
+</div>
+			
+				<div id="account_name-hl" class="input-group">
+	<span class="input-group-addon">account_name</span>
+	<span class="tooltiptext">The user may specify the account name being used on the cluster. This setting must be obtained from the cluster administrator. The account name is typically used to meter cluster usage.</span>
+	<input type="text" class="normal form-control" id="account_name" value="">
+</div>
+			
+				<div id="job_sleep-hl" class="input-group">
+	<span class="input-group-addon">job_sleep</span>
+	<span class="tooltiptext">How many seconds to wait between sending off cluster jobs. This is useful because cluster schedulers sometimes fail to submit jobs properly when they are submitted in close succession. He default setting is 1.</span>
+	<input type="text" class="normal form-control" id="job_sleep" value="1">
+</div>
+			
+				<div id="multisim-hl" class="input-group">
+	<span class="input-group-addon">multisim</span>
+	<span class="tooltiptext">Number of simulations to run with each thread. The simulations will be run in serial. If your simulations finish quickly and the permutations option is set to a large value, you may want to set multisim to a value greater than 1, which will limit the number of jobs submitted. This will avoid the idle time between job submissions. The default setting is 1.</span>
+	<input type="text" class="normal form-control" id="multisim" value="1">
+</div>
+			
+				<div id="use_cluster-hl" class="input-group">
+	<span class="input-group-addon">use_cluster</span>
+	<span class="tooltiptext">This option should be set to 1 if you are running on a cluster. It is set to 0 by default.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="use_cluster">
+	
+	</span>
+</div>
+			
+				<div id="save_cluster_output-hl" class="input-group">
+	<span class="input-group-addon">save_cluster_output</span>
+	<span class="tooltiptext">This option controls message output from the cluster job scheduler. Its default setting is 0 (no output). Setting this option to 1 may be useful for debugging and/or for reporting bugs or problems.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="save_cluster_output">
+	
+	</span>
+</div>
+			
+				<div id="run_job_from_worknode-hl" class="input-group">
+	<span class="input-group-addon">run_job_from_worknode</span>
+	<span class="tooltiptext">Whether or not your cluster allows you to submit cluster jobs FROM working nodes. BioNetFit is designed to automatically determine which setting to use, so in most cases the user will not need to set this option. Set to 0 if you can only submit cluster jobs from the submission node (common on SGE clusters). Set to 1 if you can submit cluster jobs from work nodes (common on Torque/PBS and SLURM clusters).</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="run_job_from_worknode">
+	
+	</span>
+</div>
+			
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#path-options">Path Options</h2>
+		<div id="path-options" class="collapse">
+			
+				<div id="model-hl" class="input-group">
+	<span class="input-group-addon">model</span>
+	<span class="tooltiptext">Absolute path to your model file</span>
+	<input type="text" class="normal form-control" id="model" value="">
+</div>
+			
+				<div id="exp_file-hl" class="input-group">
+	<span class="input-group-addon">exp_file</span>
+	<span class="tooltiptext">Absolute path to your .exp file. You may specify this option multiple times for multiple .exp files</span>
+	<input type="text" class="normal form-control" id="exp_file" value="">
+</div>
+			
+				<div id="output_dir-hl" class="input-group">
+	<span class="input-group-addon">output_dir</span>
+	<span class="tooltiptext">Absolute path where you want your output to go</span>
+	<input type="text" class="normal form-control" id="output_dir" value="">
+</div>
+			
+				<div id="bng_command-hl" class="input-group">
+	<span class="input-group-addon">bng_command</span>
+	<span class="tooltiptext">Absolute path to your BioNetGen executable</span>
+	<input type="text" class="normal form-control" id="bng_command" value="">
+</div>
+			
+				<div id="job_name-hl" class="input-group">
+	<span class="input-group-addon">job_name</span>
+	<span class="tooltiptext">This is the job name, and name of the directory that will contain your results.</span>
+	<input type="text" class="normal form-control" id="job_name" value="">
+</div>
+			
+		</div>
+		
+		<br>
+		<br>
+		
+		<h2 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#display-options">Display Options</h2>
+		<div id="display-options" class="collapse">
+			
+				<div id="verbosity-hl" class="input-group">
+	<span class="input-group-addon">verbosity</span>
+	<span class="tooltiptext">How much information to display about run progress.  0 = no information, 4 = way more information than you are likely to need. 1 or 2 is recommended. Default is 1.</span>
+	<select id="verbosity" class="listbox">
+		
+			
+				<option id="verbosity" value="0">0</option>
+			
+		
+			
+				<option id="verbosity" value="1">1</option>
+			
+		
+			
+				<option id="verbosity" value="2">2</option>
+			
+		
+			
+				<option id="verbosity" value="3">3</option>
+			
+		
+			
+				<option id="verbosity" value="4">4</option>
+			
+		
+	</select>
+</div>
+			
+				<div id="ask_create-hl" class="input-group">
+	<span class="input-group-addon">ask_create</span>
+	<span class="tooltiptext">Whether or not to ask when creating a new output directory. Default is 1.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="ask_create">
+	
+	</span>
+</div>
+			
+				<div id="ask_overwrite-hl" class="input-group">
+	<span class="input-group-addon">ask_overwrite</span>
+	<span class="tooltiptext">Whether or not to ask when overwriting existing job output. Default is 1. Warning: Turning this off can be dangerous!</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="ask_overwrite">
+	
+	</span>
+</div>
+			
+				<div id="show_welcome_message-hl" class="input-group">
+	<span class="input-group-addon">show_welcome_message</span>
+	<span class="tooltiptext">Whether or not to show a welcome message when running BioNetFit. Default is 1.</span>
+	<span class="input-group-addon" name="checkbox">
+	
+		<input class="bool" type="checkbox" id="show_welcome_message">
+	
+	</span>
+</div>
+			
+		</div>
+		
+	</div> <!-- left column -->
+	
+	
+	
+	
+	<div class="col-md-2"></div>
+	
+	
+	
+	<!-----------------------LIVE PREVIEW--------------------------->
+	
+	<div class="col-md-6 col-sm-12">
+	
+		<div class="dataspy">
+		<h2 id="preview-title">Live Preview</h2>
+	
+		<div class="preview container-fluid">
+	
+		<pre class="p-label" id="free-options-p">
+
+####################
+### Free Options ###
+####################</pre>
+		<div class="p-label" id="mutate-p" style="display: none;">
+	mutate=default
+</div>
+		
+			<div class="p-label" id="r1-p" style="display: none;">
+	loguniform_var=r1
+</div>
+		
+			<div class="p-label" id="r2-p" style="display: none;">
+	loguniform_var=r2
+</div>
+		
+			<div class="p-label" id="r3-p" style="display: none;">
+	loguniform_var=r3
+</div>
+		
+			<div class="p-label" id="r4-p" style="display: none;">
+	loguniform_var=r4
+</div>
+		
+			<div class="p-label" id="r5-p" style="display: none;">
+	loguniform_var=r5
+</div>
+		
+
+		<pre class="p-label" id="general-options-p">
+
+#######################
+### General Options ###
+#######################</pre>		
+
+		
+			<div class="p-label" id="max_walltime-p" style="display: none;">
+	max_walltime=
+</div>
+		
+			<div class="p-label" id="parallel_count-p" style="display: none;">
+	parallel_count=
+</div>
+		
+			<div class="p-label" id="population_size-p" style="display: none;">
+	population_size=
+</div>
+		
+		
+		
+			<div class="p-label" id="seed-p" style="display: none;">
+	seed=
+</div>
+		
+			<div class="p-label" id="max_retries-p" style="display: none;">
+	max_retries=
+</div>
+		
+			<div class="p-label" id="make_plots-p" style="display: none;">
+	make_plots=
+</div>
+		
+			<div class="p-label" id="delete_old_files-p" style="display: none;">
+	delete_old_files=
+</div>
+		
+
+		<pre class="p-label" id="fitting-options-p">
+
+#######################
+### Fitting Options ###
+#######################</pre>		
+
+		
+			<div class="p-label" id="max_generations-p" style="display: none;">
+	max_generations=
+</div>
+		
+			<div class="p-label" id="permutations-p" style="display: none;">
+	permutations=
+</div>
+		
+		
+		
+			<div class="p-label" id="smoothing-p" style="display: none;">
+	smoothing=
+</div>
+		
+			<div class="p-label" id="objfunc-p" style="display: none;">
+	objfunc=
+</div>
+		
+			<div class="p-label" id="extra_weight-p" style="display: none;">
+	extra_weight=
+</div>
+		
+			<div class="p-label" id="swap_rate-p" style="display: none;">
+	swap_rate=
+</div>
+		
+			<div class="p-label" id="max_parents-p" style="display: none;">
+	max_parents=
+</div>
+		
+			<div class="p-label" id="keep_parents-p" style="display: none;">
+	keep_parents=
+</div>
+		
+			<div class="p-label" id="min_objfunc_value-p" style="display: none;">
+	min_objfunc_value=
+</div>
+		
+			<div class="p-label" id="max_objfunc_value-p" style="display: none;">
+	max_objfunc_value=
+</div>
+		
+			<div class="p-label" id="first_gen_permutations-p" style="display: none;">
+	first_gen_permutations=
+</div>
+		
+			<div class="p-label" id="log_transform_sim_data-p" style="display: none;">
+	log_transform_sim_data=
+</div>
+		
+			<div class="p-label" id="fit_type-p" style="display: none;">
+	fit_type=
+</div>
+		
+			<div class="p-label" id="output_every-p" style="display: none;">
+	output_every=
+</div>
+		
+			<div class="p-label" id="num_islands-p" style="display: none;">
+	num_islands=
+</div>
+		
+			<div class="p-label" id="mutate_type-p" style="display: none;">
+	mutate_type=
+</div>
+		
+			<div class="p-label" id="cr-p" style="display: none;">
+	cr=
+</div>
+		
+			<div class="p-label" id="migration_frequency-p" style="display: none;">
+	migration_frequency=
+</div>
+		
+			<div class="p-label" id="num_to_migrate-p" style="display: none;">
+	num_to_migrate=
+</div>
+		
+			<div class="p-label" id="inertia-p" style="display: none;">
+	inertia=
+</div>
+		
+			<div class="p-label" id="cognitive-p" style="display: none;">
+	cognitive=
+</div>
+		
+			<div class="p-label" id="social-p" style="display: none;">
+	social=
+</div>
+		
+			<div class="p-label" id="nmin-p" style="display: none;">
+	nmin=
+</div>
+		
+			<div class="p-label" id="nmax-p" style="display: none;">
+	nmax=
+</div>
+		
+			<div class="p-label" id="inertiaInit-p" style="display: none;">
+	inertiaInit=
+</div>
+		
+			<div class="p-label" id="inertiaFinal-p" style="display: none;">
+	inertiaFinal=
+</div>
+		
+			<div class="p-label" id="abs_tolerance-p" style="display: none;">
+	abs_tolerance=
+</div>
+		
+			<div class="p-label" id="rel_tolerance-p" style="display: none;">
+	rel_tolerance=
+</div>
+		
+			<div class="p-label" id="mutate_qpso-p" style="display: none;">
+	mutate_qpso=
+</div>
+		
+			<div class="p-label" id="topology-p" style="display: none;">
+	topology=
+</div>
+		
+			<div class="p-label" id="pso_type-p" style="display: none;">
+	pso_type=
+</div>
+		
+			<div class="p-label" id="synchronicity-p" style="display: none;">
+	synchronicity=
+</div>
+		
+			<div class="p-label" id="enhanced_stop-p" style="display: none;">
+	enhanced_stop=
+</div>
+		
+			<div class="p-label" id="enhanced_inertia-p" style="display: none;">
+	enhanced_inertia=
+</div>
+		
+			<div class="p-label" id="use_pipes-p" style="display: none;">
+	use_pipes=
+</div>
+		
+			<div class="p-label" id="divide_by_init-p" style="display: none;">
+	divide_by_init=
+</div>
+		
+			<div class="p-label" id="stop_when_stalled-p" style="display: none;">
+	stop_when_stalled=
+</div>
+		
+			<div class="p-label" id="standardize_sim_data-p" style="display: none;">
+	standardize_sim_data=
+</div>
+		
+			<div class="p-label" id="standardize_exp_data-p" style="display: none;">
+	standardize_exp_data=
+</div>
+		
+			<div class="p-label" id="force_different_parents-p" style="display: none;">
+	force_different_parents=
+</div>
+		
+		
+		<pre class="p-label" id="cluster-options-p">
+
+#######################
+### Cluster Options ###
+#######################</pre>	
+
+		
+			<div class="p-label" id="cluster_command-p" style="display: none;">
+	cluster_command=
+</div>
+		
+			<div class="p-label" id="cluster_software-p" style="display: none;">
+	cluster_software=
+</div>
+		
+			<div class="p-label" id="pe_name-p" style="display: none;">
+	pe_name=
+</div>
+		
+			<div class="p-label" id="queue_name-p" style="display: none;">
+	queue_name=
+</div>
+		
+			<div class="p-label" id="account_name-p" style="display: none;">
+	account_name=
+</div>
+		
+			<div class="p-label" id="job_sleep-p" style="display: none;">
+	job_sleep=
+</div>
+		
+			<div class="p-label" id="multisim-p" style="display: none;">
+	multisim=
+</div>
+		
+			<div class="p-label" id="use_cluster-p" style="display: none;">
+	use_cluster=
+</div>
+		
+			<div class="p-label" id="save_cluster_output-p" style="display: none;">
+	save_cluster_output=
+</div>
+		
+			<div class="p-label" id="run_job_from_worknode-p" style="display: none;">
+	run_job_from_worknode=
+</div>
+		
+
+
+		<pre class="p-label" id="path-options-p">
+
+####################
+### Path Options ###
+####################</pre>
+
+		
+			<div class="p-label" id="model-p" style="display: none;">
+	model=
+</div>
+		
+			<div class="p-label" id="exp_file-p" style="display: none;">
+	exp_file=
+</div>
+		
+			<div class="p-label" id="output_dir-p" style="display: none;">
+	output_dir=
+</div>
+		
+			<div class="p-label" id="bng_command-p" style="display: none;">
+	bng_command=
+</div>
+		
+			<div class="p-label" id="job_name-p" style="display: none;">
+	job_name=
+</div>
+		
+
+
+		<pre class="p-label" id="display-options-p">
+
+#######################
+### Display Options ###
+#######################</pre>		
+		
+		
+			<div class="p-label" id="verbosity-p" style="display: none;">
+	verbosity=
+</div>
+		
+			<div class="p-label" id="ask_create-p" style="display: none;">
+	ask_create=
+</div>
+		
+			<div class="p-label" id="ask_overwrite-p" style="display: none;">
+	ask_overwrite=
+</div>
+		
+			<div class="p-label" id="show_welcome_message-p" style="display: none;">
+	show_welcome_message=
+</div>
+		
+		
+		
+		<br>
+		</div> <!-- preview container -->
+		</div> <!-- dataspy container -->
+		
+	</div> <!-- right column -->
+	
+	</div> <!-- row -->
+
+	<div class="row">
+		
+		<div class="container text-center">
+			<br>
+			<br>
+			<button class="btn btn-success" onclick="download('bionetfit.conf', getData())" id="download">Download</button>
+			<button class="btn btn-primary" id="monsoon">Run on Monsoon</button>
+			<br>
+			<br>
+		</div>
+		
+</div>
+
+	
+</div> <!-- container-fluid -->
+
+
+<script>
+
+	// Normal input live preview
+	$(".normal").keyup(function () {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		var inpt = $(this).val();
+		if (inpt == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html(oldId + "=" + inpt);
+		}
+		
+	});
+	
+	// Bool input live preview
+	$(".bool").change(function () {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		$("#" + newId).css("display", "block");
+		if(this.checked) {
+			$("#" + newId).html(oldId + "=1");
+		} else {
+			$("#" + newId).html(oldId + "=0");
+		}
+	});
+
+	// Listbox input live preview
+	$(".listbox").click(function () {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		var val = $(this).find(":selected").text();
+		$("#" + newId).css("display", "block");
+		$("#" + newId).html(oldId + "=" + val);
+	});
+	
+	// Free input live preview
+	$(".free").keyup(function () {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+		var vartype = $("#" + splitId[0] + "-vartype").find(":selected").val();
+		
+		if (splitId[1] == "lower") {
+			var lower = this;
+			var upper = document.getElementById(splitId[0] + "-upper")
+			var increment = document.getElementById(splitId[0] + "-increment")
+		} else if (splitId[1] == "upper") {
+			var lower = document.getElementById(splitId[0] + "-lower");
+			var upper = this;
+			var increment = document.getElementById(splitId[0] + "-increment");
+		} else {
+			var lower = document.getElementById(splitId[0] + "-lower");
+			var upper = document.getElementById(splitId[0] + "-upper");
+			var increment = this;
+		}
+		
+		var toWrite = vartype + "=" + splitId[0] + " " + lower.value + " ";
+		if (upper.style.display != "none") {
+			toWrite += upper.value + " ";
+		}
+		if (increment.style.display != "none") {
+			toWrite += increment.value;
+		}
+				
+		var newId = splitId[0] + "-p";
+		if (lower.value == "" && upper.value == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html(toWrite);
+		}
+	});
+	
+	// Free input var type change
+	$(".vartype").change(function() {
+		var oldId = $(this).attr("id");
+		var label = oldId.split("-")[0];
+		var increment = $("#" + label + "-increment");
+		var upper = $("#" + label + "-upper");
+				
+		var vartype = $(this).find(":selected").text();
+		if (vartype == "loguniform") {
+			increment.css("display", "none");
+			upper.css("display", "block");
+		} else if (vartype == "random") {
+			increment.css("display", "none");
+			upper.css("display", "block");
+		} else if (vartype == "lognormrandom") {
+			increment.css("display", "none");
+			upper.css("display", "block");
+		} else if (vartype == "static_list"){
+			increment.css("display", "none");
+			upper.css("display", "none");
+		}
+		$("#" + label + "-lower").keyup();
+	});
+	
+	// Walltime input live preview
+	$(".walltime").keyup(function() {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+
+		if (splitId[1] == "h") {
+			var hours = $(this).val();
+			var minutes = document.getElementById(splitId[0] + "-m").value;
+			var seconds = document.getElementById(splitId[0] + "-s").value;
+		} else if (splitId[1] == "m") {
+			var hours = document.getElementById(splitId[0] + "-h").value;
+			var minutes = $(this).val();
+			var seconds = document.getElementById(splitId[0] + "-s").value;
+		} else {
+			var hours = document.getElementById(splitId[0] + "-h").value;
+			var minutes = document.getElementById(splitId[0] + "-m").value;
+			var seconds = $(this).val();
+		}
+		
+		
+		var newId = splitId[0] + "-p";
+		if (hours == "" && minutes == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html(splitId[0] + "=" + hours + ":" + minutes + ":" + seconds);
+		}
+	});
+	
+	
+	// Highlight label
+	var lastHovered = null;
+	$(".input-group").mouseover(function() {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+		var toHighlight = $("#" + splitId[0] + "-p");
+		toHighlight.addClass("highlight");
+		
+		if (toHighlight.attr("id") != lastHovered && toHighlight.css("display") != "none") {
+			// Scroll to label in live preview
+			var previewTop = $(".preview").position().top;
+			var offset = toHighlight.position().top;
+			if (offset < 0) {
+				offset = 0;
+			}
+			lastHovered = toHighlight.attr("id");
+			$(".preview").scrollTop(offset);
+		}
+	});
+	
+	// Remove highlight on label
+	$(".input-group").mouseout(function() {
+		var oldId = $(this).attr("id");
+		var splitId = oldId.split("-");
+		var toHighlight = $("#" + splitId[0] + "-p");
+		toHighlight.removeClass("highlight");
+	});
+	
+	var expContents = `#	time	x	y
+	0	0	-3200
+	20	20	-5847960
+	40	40	-107025920
+	60	60	-409761080
+`;
+	var expName = "polynomial.exp";
+	$(function() {
+		$("#monsoon").click(function() {
+
+			/*
+			var data = getData();
+			
+			
+			$.ajax({type: "POST",
+					url: "/user",
+					data: {conf: data,
+						   bngl: `begin model
+
+  begin parameters
+    # roots of 5th degree polynomial y(x)-1000
+#    r1 1
+#    r2 1.5
+#    r3 4
+#    r4 7
+#    r5 100
+#These values above are the original ones, now lets convert them to free parameters so our software will have to guess what values they are
+
+
+    r1 r1__FREE__
+    r2 r2__FREE__
+    r3 r3__FREE__
+    r4 r4__FREE__
+    r5 r5__FREE__
+	
+
+  end parameters
+
+  begin molecule types
+    counter()
+  end molecule types
+
+  begin seed species
+    # initial conditions
+    counter() 0
+  end seed species
+
+  begin observables
+    Molecules x counter()
+  end observables
+
+  begin functions
+    y()=(x-r1)*(x-r2)*(x-r3)*(x-r4)*(x-r5)+1000
+  end functions
+
+  begin reaction rules
+    0-&gt;counter() 1
+  end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=&gt;1})
+#  simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;10,n_steps=&gt;100,print_functions=&gt;1})
+   simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;100,n_steps=&gt;100,print_functions=&gt;1,prefix=&gt;&quot;polynomial&quot;})
+#  simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;60,sample_times=&gt;[0,5,10,15,20,25,30,35,40,45,50,55,60],prefix=&gt;&quot;exMutM1&quot;})
+
+#simulate({method=&gt;&quot;ode&quot;,t_start=&gt;0,t_end=&gt;60,sample_times=&gt;[0,5,10,15,20,25,30,35,40,45,50,55,60],prefix=&gt;&quot;exMutM1&quot;})
+
+end actions
+
+
+`,
+						   exp: `#	time	x	y
+	0	0	-3200
+	20	20	-5847960
+	40	40	-107025920
+	60	60	-409761080
+`,
+						   bnglName: "polynomial.bngl",
+						   expName: "polynomial.exp",
+						   csrfmiddlewaretoken: 'CRtc0MmhyrwCGNmd8OPBZYpWDoZ4BS9RcQAQARpf4Fd0fHLD9acZ3JVSwfc1vhhw'},
+					success: function() 
+						{
+							location.href="user"
+						}
+					});
+			*/
+			$("#monsoon-confirm").css("display", "block");
+			
+			
+			// Display and check the project name (done in different function)
+			$("#project_name-modal").keyup();
+			
+			// Display and check the memory (done in different function)
+			$("#memory-modal").keyup();
+			
+			// Display and check walltime
+			var hours = $("#max_walltime-h").val();
+			var minutes = $("#max_walltime-m").val();
+			var seconds = $("#max_walltime-s").val();
+			var timeFields = [hours, minutes, seconds];
+			var timeIsValid = true;
+			for (var i = 0; i < timeFields.length; i++) {
+				for (var j = 0; j < timeFields[i].length; j++) {
+					if (timeFields[i][j] < '0' || timeFields[i][j] > '9') {
+						timeIsValid = false;
+					}
+				}
+			}
+			var walltime = hours + ":" + minutes + ":" + seconds;
+			$("#walltime-modal").val(walltime);
+			if (timeIsValid && (+hours < 336)) {	// Don't allow a job longer than 2 weeks (?)
+				$("#walltime-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			} else {
+				$("#walltime-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+			}
+			
+			// Display and check BNGL file
+			$("#bngl-modal").val("polynomial.bngl");
+			$("#bngl-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			
+			// Display and check EXP file
+			if ("polynomial.exp" != "") {
+				$("#exp-modal").val("polynomial.exp");
+				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			} else {
+				$("#exp-upload").css("display", "block");
+				$("#exp-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+			}
+			
+		});
+	});
+	
+	// X and Cancel buttons on monsoon confirmation popup
+	$(".close, #cancel-monsoon").click(function() {
+		$("#monsoon-confirm").css("display", "none");
+	});
+	
+	// EXP upload field in monsoon confirmation popup
+	$("#exp-upload").change(function() {
+		if ($(this).prop("files").length > 0) {
+			var filename = $(this).prop("files")[0].name;
+			var reader = new FileReader();
+			reader.readAsText($(this).prop("files")[0]);
+			reader.onload = function(evt) {
+				expContents = evt.target.result;
+				$("#exp-modal").val(filename);
+				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+			};
+		}
+	});
+	
+	// Memory field check in monsoon confirmation popup
+	$("#memory-modal").keyup(function() {
+		var contents = $(this).val();
+		var isValid = true ? contents.length > 0 : false;
+		for (var i = 0; i < contents.length; i++) {
+			if (contents[i] < '0' || contents[i] > '9') {
+				isValid = false;
+			}
+		}
+		
+		if (isValid && (+contents < 100)) {	// 100 GB limit on jobs (?)
+			$("#memory-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+		} else {
+			$("#memory-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+		}
+	});
+	
+	// Project name field check in monsoon confirmation popup
+	$("#project_name-modal").keyup(function() {
+		var contents = $(this).val();
+		if (contents.match(/^[a-z0-9-]+$/i) && contents.length < 30) {	// 30 char limit (?)
+			$("#project_name-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
+		} else {
+			$("#project_name-check").html('<i class="fa fa-times" aria-hidden="true"></i>');
+		}
+	});
+	
+	// Allow user to submit job if all checks pass in monsoon confirmation popup
+	$(".modal-field").on("change, keyup", function() {
+		var allFields = [$("#project_name-check"), $("#memory-check"), $("#walltime-check"), $("#bngl-check"), $("#exp-check")];
+		allPass = true;
+		for (var i = 0; i < allFields.length; i++) {
+			if (allFields[i].html() != '<i class="fa fa-check" aria-hidden="true"></i>') {
+				allPass = false;
+				break;
+			}
+		}
+		if (allPass) {
+			$("#submit-monsoon").prop("disabled", false);
+		} else {
+			$("#submit-monsoon").prop("disabled", false);
+		}
+	});
+	
+	// Submit job
+	$("#submit-monsoon").click(function() {
+		$(this).prop("disabled", true);
+		$(this).html('<i class="fa fa-gear fa-spin" aria-hidden="true"></i>');
+		var data = getData();
+		var memory = $("#memory-modal").val();
+		var walltime = $("#walltime-modal").val();
+		
+		$.ajax({type: "POST",
+				url: "/example",
+				data: {step: "view",
+					   csrfmiddlewaretoken: 'CRtc0MmhyrwCGNmd8OPBZYpWDoZ4BS9RcQAQARpf4Fd0fHLD9acZ3JVSwfc1vhhw'},
+				success: function(toRender) 
+					{
+						$("#main-container").html(toRender);
+					}
+		});
+		
+	});
+	
+	function download(filename, text) {
+		var element = document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+		element.setAttribute('download', filename);
+
+		element.style.display = 'none';
+		document.body.appendChild(element);
+
+		element.click();
+		
+		document.body.removeChild(element);
+	}
+	
+	function getData() {
+		var data = "";
+		
+		var fields = document.getElementsByClassName("p-label");
+		for (var i = 0; i < fields.length; i++) {
+			if (fields[i].style.display != "none") {
+				data += fields[i].textContent + "\n";
+			}
+		}
+		
+		return data;
+	}
+	
+	$(".close-info").click(function() {
+		$("#create-info").css("display", "none");
+	});
+</script>

@@ -1,0 +1,145 @@
+{% extends "master.html" %}
+
+{% block content %}
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+
+<div id="main-container">
+  
+<style type="text/css">
+p,h3 {
+	font-size: 90%;
+}
+
+.preview {
+	background-color: #E8ECEF;
+	font-family: monospace;
+	white-space: pre-wrap;
+	overflow-x: auto;
+	overflow-y: auto;
+	color: black;
+	text-align: left;
+	font-size: 60%;
+	max-height: 600px;
+}
+
+.h-hover:hover {
+	text-decoration: underline;
+	cursor: pointer;
+}
+</style>
+
+<div id="content-container">
+
+	<div class="container">
+		<br>
+		<p>BioNetWeb is designed to make running BioNetFit and interpreting the results easier. The workflow of the website is as follows:</p>
+		<ol style="border-bottom: 1px solid white;">
+			<li style="font-size: 90%">Upload a .bngl and .exp file.</li>
+			<br>
+			<li style="font-size: 90%">You will be redirected to the configuration file creation tool, where you will fill out the necessary and relevant information to your BioNetFit simulation. After you have finished, you can download the .conf file you just created, or, if you have an <b>approved</b> account, you can run BioNetFit on NAU's high performance computing cluster <i>Monsoon</i>.</li>
+			<br>
+			<li style="font-size: 90%">If you choose to run BioNetFit on <i>Monsoon</i>, you will have the ability to view and visualize the output files on your profile page.</li>
+			<br>
+		</ol>
+		
+		<p>In this example, we are going to pretend that you uploaded simple .bngl and .exp files which can be viewed below:</p>
+	</div>
+	<br>
+	<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-6 col-sm-12 text-center">
+			<h3 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#bngl-file">polynomial.bngl</h3>
+			<div id="bngl-file" class="pt-0 mt-0 preview container-fluid collapse">
+begin model
+
+  begin parameters
+    # roots of 5th degree polynomial y(x)-1000
+#    r1 1
+#    r2 1.5
+#    r3 4
+#    r4 7
+#    r5 100
+#These values above are the original ones, now lets convert them to free parameters so our software will have to guess what values they are
+
+
+    r1 r1__FREE__
+    r2 r2__FREE__
+    r3 r3__FREE__
+    r4 r4__FREE__
+    r5 r5__FREE__
+	
+
+  end parameters
+
+  begin molecule types
+    counter()
+  end molecule types
+
+  begin seed species
+    # initial conditions
+    counter() 0
+  end seed species
+
+  begin observables
+    Molecules x counter()
+  end observables
+
+  begin functions
+    y()=(x-r1)*(x-r2)*(x-r3)*(x-r4)*(x-r5)+1000
+  end functions
+
+  begin reaction rules
+    0->counter() 1
+  end reaction rules
+
+end model
+
+begin actions
+  generate_network({overwrite=>1})
+#  simulate({method=>"ode",t_start=>0,t_end=>10,n_steps=>100,print_functions=>1})
+   simulate({method=>"ode",t_start=>0,t_end=>100,n_steps=>100,print_functions=>1,prefix=>"polynomial"})
+#  simulate({method=>"ode",t_start=>0,t_end=>60,sample_times=>[0,5,10,15,20,25,30,35,40,45,50,55,60],prefix=>"exMutM1"})
+
+#simulate({method=>"ode",t_start=>0,t_end=>60,sample_times=>[0,5,10,15,20,25,30,35,40,45,50,55,60],prefix=>"exMutM1"})
+
+end actions
+			</div>
+		</div>
+		
+		<div class="col-md-6 col-sm-12 text-center">
+		<h3 class="dropdown-toggle h-hover" data-toggle="collapse" data-target="#exp-file">polynomial.exp</h3>
+			<div id="exp-file" class="pt-0 mt-0 preview container-fluid collapse">
+#	time	x	y
+	0	0	-3200
+	20	20	-5847960
+	40	40	-107025920
+	60	60	-409761080
+			</div>
+		</div>
+	</div>
+	</div>
+	<br>
+
+	<div class="container center-block text-center">
+		<button id="next-step" class="btn btn-success">Next Step: Configuration File Creation</button>
+	</div>
+	<br><br>
+	</div>
+<script>
+	$("#next-step").click(function() {
+		$.ajax({type: "POST",
+				url: "/example",
+				data: {step: "create",
+				       csrfmiddlewaretoken: '{{ csrf_token }}'},
+				success: function(toRender)
+					{
+						$("#main-container").html(toRender);
+					}
+		});
+	});
+</script>
+</div>
+{% endblock %}

@@ -24,7 +24,8 @@ def get_directories(main_folder):
 
 
 def get_best_perms(directories):
-    FILE_NAME = "perm_model_diff.txt"
+    #FILE_NAME = "perm_model_diff.txt"
+    FILE_NAME = "Ranked_results.txt"
     out = {}
     for d in directories:
         with open(os.path.join(d, FILE_NAME), "rU") as f:
@@ -33,15 +34,14 @@ def get_best_perms(directories):
     return out
 
 def get_average_perms(directories):
-    FILE_NAME = "perm_model_diff.txt"
+    #FILE_NAME = "perm_model_diff.txt"
+    FILE_NAME = "Ranked_results.txt"
     out = {}
     for d in directories:
-        try:
-            with open(os.path.join(d, FILE_NAME), "rU") as f:
-                lines = f.readlines()
-                average = lines[len(lines)-2]
-                out[d] = average.split()[0]
-        except FileNotFoundError:
+        with open(os.path.join(d, FILE_NAME), "rU") as f:
+            lines = f.readlines()
+            average = lines[len(lines)//2]
+            out[d] = average.split()[0]
     return out
 
 
@@ -58,14 +58,7 @@ def get_best_perms(directories):
 
 
 def read_best_perms(exp_fields, best_perms):
-
     out = {}
-    
-    mins = {}
-    maxs = {}
-    for field in exp_fields:
-        mins[field] = 999999999999999999999
-        maxs[field] = -999999999999999999999
 
     for perm in best_perms:
 
@@ -73,7 +66,7 @@ def read_best_perms(exp_fields, best_perms):
         for field in exp_fields:
             obv[field] = []
         
-        for file in glob.glob("{0}/*{1}.gdat".format(perm, best_perms[perm])):
+        for file in glob.glob("{0}/*_{1}_*.gdat".format(perm, best_perms[perm])):
             with open(file, "rU") as f:
 
                 # Calculate which fields to look at in the gdat files
@@ -81,16 +74,10 @@ def read_best_perms(exp_fields, best_perms):
                 fields = f.readline().split()
                 for field in exp_fields:
                     indeces.append(fields.index(field)-1)
-
                 for line in f:
                     data = line.split()
                     for idx, index in enumerate(indeces):
                         val = float(data[index])
-                        if val < mins[exp_fields[idx]]:
-                            mins[exp_fields[idx]] = val
-                        if val > maxs[exp_fields[idx]]:
-                            maxs[exp_fields[idx]] = val
-                            
                         obv[exp_fields[idx]].append(val)
 
         out[int(os.path.basename(perm))] = obv
@@ -101,20 +88,19 @@ def read_best_perms(exp_fields, best_perms):
 
 def make_perm_csv(data, is_best, output_dir):
     times = data[1]["time"]
-
     if is_best:
         outfile_name = "{0}/best_data.csv".format(output_dir)
     else:
         outfile_name = "{0}/avg_data.csv".format(output_dir)
 
     with open(outfile_name, "w") as outfile:
-        outfile.write("gen,name,value,time\n")
+        outfile.write("gen,name,value,time\\n")
         for gen in data:
             for name in data[gen]:
                 if name == "time":
                     continue
                 for idx, datum in enumerate(data[gen][name]):
-                    outfile.write("{0},{1},{2},{3}\n".format(gen,name,datum,times[idx]))
+                    outfile.write("{0},{1},{2},{3}\\n".format(gen,name,datum,times[idx]))
 
     
 def make_exp_csv(data, output_dir):
@@ -139,7 +125,7 @@ def write_observables(data, output_dir, num_gens):
     with open("{}/obv_names.txt".format(output_dir), "w") as outfile:
         for obv in observables:
             outfile.write(obv + "\n")
-        outfile.write(num_gens + "\n")
+        outfile.write(str(num_gens) + "\n")
 
 
 

@@ -9,9 +9,12 @@ from wsgiref.util import FileWrapper
 
 from . import options
 from . import bnw_paths
+from . import polynomial
 from . import secret_login
 from . import ssh_connection
 
+import zipfile
+import pickle
 import html
 import time
 import json
@@ -155,8 +158,30 @@ def example(request):
     if request.method == 'POST':
         if request.POST.get('step', '') == 'create':
             return render(request, 'home/example_create.html')
-        
+        elif request.POST.get('step', '') == 'view':
+            return render(request, 'home/example_view.html', {"projects": ["polynomial"]})
+        elif request.POST.get('type', '') == 'project':
+            return HttpResponse(json.dumps(polynomial.polynomial))
+        elif request.POST.get('type', '') == 'file':
+            path = json.loads(request.POST.get('file', ''))
+            current_level = polynomial.polynomial
+            for p in path:
+                current_level = current_level[p]
+            return HttpResponse(json.dumps(current_level))        
+            
     return render(request, 'home/example.html')
+
+def example_download(request):
+    archive = download_project_polynomial()
+    resp = HttpResponse(archive.getvalue(), content_type="application/x-zip-compressed")
+    resp["Content-Disposition"] = "attachment; filename={}".format("polynomial.zip")
+    return resp
+
+def example_bestfit(request):
+    return render(request, "home/example_bestfit_plot.html", {"observables": ["x", "y"]})
+
+def example_generation(request):
+    return render(request, "home/example_generation_plot.html", {"observables": ["x", "y"], "max_gen": 100})
 
 def to_mongo_key(filename):
     return filename.replace(".", bnw_paths.Paths.delimiter)
@@ -626,3 +651,8 @@ def download_project(request):
     resp["Content-Disposition"] = "attachment; filename={}".format(project_name + ".zip")
 
     return resp
+
+
+def download_project_polynomial():
+    with open(os.path.join("home", "polynomial.pickle"), "rb") as infile:
+        return pickle.load(infile)

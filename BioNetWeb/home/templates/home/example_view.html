@@ -1,0 +1,488 @@
+{% block content %}
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+  
+ <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+
+
+<style type="text/css">
+    .container {
+        padding-top: 10px;
+    }
+    .btn {
+
+	}
+    
+	body {
+        background-image: url('/static/img/background.jpg');
+    }
+    
+	textarea.form-control{
+        height:100px;
+    }
+    
+	.size-override {
+		font-size: 150% !important;
+    }
+    
+	.panel {
+        border-bottom: 1px solid white;
+    }
+	
+	.listbox {
+		width: 100%;
+	}
+	
+	.option {
+		font-size: 125%;
+		padding-bottom: 5px;
+	}
+	
+	.preview {
+		background-color: #E8ECEF;
+		text-align: center;
+		overflow-y: auto;
+		height: 100%;
+		max-height: 600px;
+	}
+	
+	.fa {
+		font-size: 220%;
+		color: #585858;
+
+	}
+	
+	.fileitem {
+		margin: 4px;
+		padding: 2px;
+		display: inline-block;
+		max-width: 110px;
+		width: 110px;
+	}
+	
+	.text {
+		color: #000;
+		font-size: 50%;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+		overflow: hidden;
+		text-align: center;
+	}
+	
+	.highlight {
+		background-color: #CCE8FE;
+		border: 1px solid #2b72e5;
+	}
+	
+	#file-preview {
+		font-family: monospace;
+		white-space: pre-wrap;
+		overflow-x: auto;
+		color: black;
+		text-align: left;
+		font-size: 60%;
+	}
+	
+	.visualization {
+		cursor: pointer;
+		margin-bottom: 1px;
+	}
+	
+	.dataspy {
+		position: sticky;
+		top: 10px;
+	}
+	
+	.modal {
+		display: none; /* Hidden by default */
+		position: fixed; /* Stay in place */
+		z-index: 9999; /* Sit on top */
+		padding-top: 100px; /* Location of the box */
+		left: 0;
+		top: 0;
+		width: 100%; /* Full width */
+		height: 100%; /* Full height */
+		overflow: auto; /* Enable scroll if needed */
+		background-color: rgb(0,0,0); /* Fallback color */
+		background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+	}
+
+	/* Modal Content */
+	.modal-content {
+		position: relative;
+		background-color: #fefefe;
+		margin: auto;
+		padding: 0;
+		border: 1px solid #888;
+		width: 60%;
+		box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+		-webkit-animation-name: animatetop;
+		-webkit-animation-duration: 0.4s;
+		animation-name: animatetop;
+		animation-duration: 0.4s
+		color: black;
+	}
+	
+	.modal-content input {
+		width: 50%;
+	}
+
+	/* Add Animation */
+	@-webkit-keyframes animatetop {
+		from {top:-300px; opacity:0} 
+		to {top:0; opacity:1}
+	}
+
+	@keyframes animatetop {
+		from {top:-300px; opacity:0}
+		to {top:0; opacity:1}
+	}
+
+	/* The Close Button */
+	.close {
+		color: white;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	}
+
+	.close:hover,
+	.close:focus {
+		color: #000;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.modal-header {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+
+	.modal-body {
+		padding: 2px 16px;
+		color: black;
+	}
+
+	.modal-footer {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+	
+	.modal-body input {
+		width: 100%;
+	}
+	.fa-check {
+		color: green;
+	}
+	.fa-times {
+		color: red;
+	}
+	#create-info {
+		display: block;
+		font-size: 80%;
+	}
+	#create-info p {
+		text-indent: 4%;
+	}
+	
+</style>
+
+<body>
+    <div class="container-fluid">
+        
+			<div class="row">
+			
+			<div id="create-info" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h2 style="padding: 5px;">Configuration File Creation</h2>
+						<span class="close-info">&times;</span>
+					</div>
+					<div class="modal-body">
+						<div class="container block-center">
+							<p>This is an example of a profile page.  As you can see, the project you just ran, <i>polynomial</i>, is available for viewing.  You can view the input and output files, download any single file, download the all the files as a .zip archive, and visualize the results.</p>
+							<p>This concludes the tutorial.</p>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<div class="container text-center" style="padding: 10px;">
+							<button class="btn btn-primary close-info" style="width: 6em">Ok</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			
+			<div class="left col-md-3 col-sm-4">
+				<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h1>
+				<div class="panel panel-default">
+					<div class="panel-body">
+					
+						<select class="listbox" id="projects" size="10">
+							{% for p in projects %}
+								{% include "home/listbox_option.html" with label=p %}
+							{% endfor %}
+						</select>
+						
+						
+						
+					</div>
+				</div>
+				
+				<br>
+				
+				<div style="margin-right: 5%; display: inline-block;" class="dropdown">
+					<button id="vis-menu" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>Visualizations
+					<span class="caret"></span></button>
+					<ul class="dropdown-menu">
+						<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
+						<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
+					</ul>
+				</div>
+				
+				<button id="download-project" class="btn btn-success" type="button" disabled>Download Project
+				
+				</div> <!-- left column -->
+				
+				
+								
+				
+				
+				
+				
+				<div class="col-md-9 col-sm-12">
+				
+					<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">File Preview<span id="filename" style="display:none;">test</span></h1>
+				
+					<div id="preview" class="pt-0 mt-0 preview container-fluid" style="">
+
+						<div id="file-system">
+						
+						</div>
+						
+						<div id="file-preview" style="display: none; padding: 0px; margins: 0px;">
+						
+							<div class="btn-group" role="group" style="float:left;">
+								<button id="back-btn" type="button" class="btn btn-secondary"><i class="fa fa-arrow-left fa-fw" aria-hidden="true" style="font-size:100%;"></i>Back</button>
+								<button id="download-file" type="button" class="btn btn-success"><i class="fa fa-download fa-fw" aria-hidden="true" style="font-size:100%;"></i>Download</button>
+							</div>
+							
+							<div id="file-contents" style="padding-top: 0px;">
+							
+							</div>
+						</div>
+					
+					
+					</div>
+					
+				</div> <!-- right column -->
+
+        
+        
+        </div> <!-- row -->
+    
+    </div> <!-- container-fluid -->
+</body>
+
+
+<script>
+
+	var filename = "";
+
+	$(document).ready(function() {
+		$(".visualization").click(function() {	
+			var visual_type = $(this).attr("id");
+			if (visual_type == "Bestfit") {
+				var url = "/example_bestfit_plot?p=" + $("#projects").val();
+			} else if (visual_type == "Generational") {
+				var url = "/example_generational_plot?p=" + $("#projects").val();
+			} else {
+				return;
+			}
+			window.open(url);
+		});
+	});
+	
+	$(document).ready(function() {
+		$("#download-project").click(function() {	
+			window.open("/example_download_project?p=" + $("#projects").val());
+		});
+	});
+	
+	$(document).ready(function() {
+		$("#download-file").click(function() {
+			download(filename, $("#file-contents").text());
+		});
+	});
+	
+	function download(filename, text) {
+		var element = document.createElement('a');
+		element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+		element.setAttribute('download', filename);
+
+		element.style.display = 'none';
+		document.body.appendChild(element);
+
+		element.click();
+		
+		document.body.removeChild(element);
+	}
+
+	
+	var structure = null;
+	
+	var path = [];
+	
+	
+	var fileitem =	'<div class="fileitem file" id="{NAME}">' + 
+						'<i class="btn fa fa-file-text" aria-hidden="true"></i>' + 
+						'<br>' + 
+						'<div class="text">{NAME}</div>' + 
+					'</div>';
+					
+	var folderitem=	'<div class="fileitem folder" id="{NAME}">' + 
+						'<i class="btn fa fa-folder-open-o" aria-hidden="true"></i>' + 
+						'<br>' + 
+						'<div class="text">{NAME}</div>' + 
+					'</div>';
+					
+	var prevFolder=	'<div class="fileitem" id="prev">' + 
+						'<i class="btn fa fa-angle-double-up" aria-hidden="true"></i>' + 
+						'<br>' + 
+						'<div class="text">..</div>' + 
+					'</div>';
+
+				
+	// Update the file system preview
+	function updatePreview() {
+		var isInner = path.length == 0 ? false : true;
+	
+		var currentLevel = structure;
+		for (var i = 0; i < path.length; i++) {
+			currentLevel = currentLevel[path[i]];
+		}
+				
+		$(".fileitem").remove();
+		
+		if (isInner) {
+			$("#file-system").append(prevFolder);
+		}
+		
+		for (var key in currentLevel) {
+
+			// Item is a file
+			if (typeof(currentLevel[key]) == "string") {
+				$("#file-system").append(fileitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
+			}
+			
+			// Item is a folder
+			else {
+				$("#file-system").append(folderitem.replace(new RegExp("{NAME}", "g"), key.replace(new RegExp("__dot__", "g"), ".")));
+			}
+		
+		}
+	}
+
+	// Get project structure
+	$(function() {
+		$("#projects").change(function() {
+			$.ajax({type: "POST",
+					url: "/example",
+					dataType: "json",
+					data: {type: "project",
+							project: $("#projects").val(),
+							csrfmiddlewaretoken: '{{ csrf_token }}'},
+					success: function(response)
+						{
+							
+							$("#file-preview").css("display", "none");
+							$("#file-system").css("display", "visible");
+							$("#vis-menu").attr("disabled", false);
+							$("#download-project").attr("disabled", false);
+							
+							structure = response;
+							path = [];
+							updatePreview(); 
+							
+						}
+			});
+		});
+	});
+	
+	// Go down one directory on whatever folder was clicked
+	$(document).ready(function() {
+		
+		$(document).on("dblclick", ".folder", function() {
+			path.push($(this).attr("id"));
+			updatePreview();
+		});
+	});
+	
+	// Go up one directory in file system
+	$(document).ready(function() {
+		
+		$(document).on("dblclick", "#prev", function() {
+			path.pop();
+			updatePreview();
+		});
+		
+	});
+	
+	// Highlight file system item on single click
+	$(document).ready(function() {
+		
+		$(document).on("click", ".fileitem", function() {
+			$(".highlight").removeClass("highlight");
+			$(this).addClass("highlight");
+		});
+		
+	});
+	
+	// Show file preview
+	$(document).ready(function() {
+		$(document).on("dblclick", ".file", function() {
+		
+			var newPath = path.slice();
+			newPath.push($(this).attr("id"));
+			filename = $(this).attr("id");
+			$.ajax({type: "POST",
+					url: "/example",
+					dataType: "json",
+					data: {type: "file",
+							project: $("#projects").val(),
+							file: JSON.stringify(newPath),
+							csrfmiddlewaretoken: '{{ csrf_token }}'},
+					success: function(response)
+						{							
+							$("#file-contents").html(response);
+							$("#file-system").hide();
+							$("#file-preview").show();
+							$("#filename").text(" - " + filename);
+							$("#filename").show();
+						}
+			});
+		
+		});
+	});
+		
+	// Go from file preview back to file system (back button)
+	$(document).ready(function() {
+		$(document).on("click", "#back-btn", function() {
+			$("#file-preview").hide();
+			$("#file-system").show();
+			$("#filename").hide();
+		});
+	});
+	
+		
+	$(".close-info").click(function() {
+		$("#create-info").css("display", "none");
+	});
+
+</script>
+
+{% endblock %}
