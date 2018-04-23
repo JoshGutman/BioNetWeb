@@ -229,7 +229,8 @@
 							<tr>
 								<td style="width: 30%">EXP File</td>
 								<td style="width: 40%"><input id="exp-modal" class="modal-field form-control" type="text" readonly></td>
-								<td style="width: 15%"><input id="exp-upload" class="form-control-sm" type="file" accept=".exp" style="display: none"></td>
+								<td style="width: 15%"><input id="exp-upload_input" class="form-control-sm" type="file" accept=".exp" style="display: none">
+								<input id="exp-upload" value="Upload" class="form-control-sm col-7" type="button" style="display: none" onclick='document.getElementById("exp-upload_input").click();'></td>
 								<td class="modal-check" id="exp-check"></td>
 							</tr>
 						</tbody>
@@ -667,7 +668,7 @@
 			
 			// Display and check EXP file
 			if (expName != "") {
-				$("#exp-modal").val("{{ exp_name }}");
+				$("#exp-modal").val(expName);
 				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 			} else {
 				$("#exp-upload").css("display", "block");
@@ -683,7 +684,7 @@
 	});
 	
 	// EXP upload field in monsoon confirmation popup
-	$("#exp-upload").change(function() {
+	$("#exp-upload_input").change(function() {
 		if ($(this).prop("files").length > 0) {
 			var filename = $(this).prop("files")[0].name;
 			var reader = new FileReader();
