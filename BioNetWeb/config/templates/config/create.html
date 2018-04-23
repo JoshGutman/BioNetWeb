@@ -631,24 +631,6 @@
 	$(function() {
 		$("#monsoon").click(function() {
 
-			/*
-			var data = getData();
-			
-			
-			$.ajax({type: "POST",
-					url: "/user",
-					data: {conf: data,
-						   bngl: `{{ bngl }}`,
-						   exp: `{{ exp }}`,
-						   bnglName: "{{ bngl_name }}",
-						   expName: "{{ exp_name }}",
-						   csrfmiddlewaretoken: '{{ csrf_token }}'},
-					success: function() 
-						{
-							location.href="user"
-						}
-					});
-			*/
 			$("#monsoon-confirm").css("display", "block");
 			
 			
@@ -684,7 +666,7 @@
 			$("#bngl-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 			
 			// Display and check EXP file
-			if ("{{ exp_name }}" != "") {
+			if (expName != "") {
 				$("#exp-modal").val("{{ exp_name }}");
 				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 			} else {
@@ -708,6 +690,7 @@
 			reader.readAsText($(this).prop("files")[0]);
 			reader.onload = function(evt) {
 				expContents = evt.target.result;
+				expName = filename;
 				$("#exp-modal").val(filename);
 				$("#exp-check").html('<i class="fa fa-check" aria-hidden="true"></i>');
 			};
@@ -784,60 +767,6 @@
 		
 	});
 
-	function genPresets(id){
-		var normalMap = {"parallel_count" : "4", "max_generations" : "50", "smoothing" : "1" , "objfunc" : "3", "extra_weight" : "0", 
-		                "smoothing" : "1", "extra_weight" : "0", "swap_rate" : "0.5", "keep_parents" : "1" , "log_transform_sim_data" : "0",
-						"population_size" : "4", "fit_type" : "ga", "output_every" : "10", "num_islands" : "3" , "mutate_type" : "4",
-						"cr" : "0.8", "migration_frequency" : "8", "num_to_migrate" : "3", "inertia" : "0.82" , "cognitive" : "1.49",
-						"social" : "1.49", "nmin" : "80", "inertiaInit" : "1", "inertiaFinal" : "0.1" , "abs_tolerance" : "10e-4",
-						"rel_tolerance" : "10e-4", "mutate_qpso" : "1", "topology" : "fullyconnected", "pso_type" : "pso" , "synchronicity" : "true",
-						"enhanced_stop" : "false", "enhanced_inertia" : "false", "use_pipes" : "false", "divide_by_init" : "false" , "make_plots" : "true",
-						"use_cluster" : "true", "delete_old_files" : "true", "ask_create" : "true" , "ask_overwrite" : "true",
-						"show_welcome_message" : "true", "min_objfunc_value" : "1"}
-	
-		var length = normalMap.length;
-		for( var key in normalMap) {
-			var e = normalMap[key];
-			if(e == "true" || e == "false") {
-				document.getElementById(key).checked=e;
-			}
-			else {
-				document.getElementById(key).value=e;
-			}
-			var label = document.getElementById(key + "-p");
-			label.style.display = "block";
-			$("#"+key).trigger("change");
-			$("#"+key).trigger("keyup");
-		}
-	}
-
-	function erasePresets(){
-		var normalMap = {"parallel_count" : "4", "max_generations" : "50", "smoothing" : "1" , "objfunc" : "3", "extra_weight" : "0", 
-		                "smoothing" : "1", "extra_weight" : "0", "swap_rate" : "0.5", "keep_parents" : "1" , "log_transform_sim_data" : "0",
-						"population_size" : "4", "fit_type" : "ga", "output_every" : "10", "num_islands" : "3" , "mutate_type" : "4",
-						"cr" : "0.8", "migration_frequency" : "8", "num_to_migrate" : "3", "inertia" : "0.82" , "cognitive" : "1.49",
-						"social" : "1.49", "nmin" : "80", "inertiaInit" : "1", "inertiaFinal" : "0.1" , "abs_tolerance" : "10e-4",
-						"rel_tolerance" : "10e-4", "mutate_qpso" : "1", "topology" : "fullyconnected", "pso_type" : "pso" , "synchronicity" : "true",
-						"enhanced_stop" : "false", "enhanced_inertia" : "false", "use_pipes" : "false", "divide_by_init" : "false" , "make_plots" : "true",
-						"cluster_software" : "BNF2mpi", "use_cluster" : "true", "delete_old_files" : "true", "ask_create" : "true" , "ask_overwrite" : "true",
-						"show_welcome_message" : "true", "model" : "/scratch/jng86/bnw/jng86/1521242221/example5.bngl", "exp_file" : "/scratch/jng86/bnw/jng86/1521242221/example5.exp", 
-						"output_dir" : "/scratch/jng86/bnw/jng86/1521242221", "bng_command" : "/scratch/jng86/BioNetFit2_pull1/Simulators/BNG2.pl", "job_name" : "jng86_1521242221", "min_objfunc_value" : "1"}
-	
-		var length = normalMap.length;
-		for( var key in normalMap) {
-			var e = normalMap[key];
-			if(e == "true" || e == "false") {
-				document.getElementById(key).checked=false;
-			}
-			else {
-				document.getElementById(key).value=null;
-			}
-			var label = document.getElementById(key + "-p");
-			label.style.display = "block";
-			$("#"+key).trigger("change");
-			$("#"+key).trigger("keyup");
-		}
-	}
 	
 	function download(filename, text) {
 		var element = document.createElement('a');
