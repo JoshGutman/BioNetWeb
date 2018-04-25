@@ -424,6 +424,13 @@
 			{% endfor %}
 		</div>
 		
+		<br>
+		
+		<div id="custom-fields">
+		
+		</div>
+		<h5 id="add-custom-option" class="h-hover"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Add custom option</h5>
+		
 	</div> <!-- left column -->
 	
 	
@@ -440,7 +447,7 @@
 		<div class="dataspy">
 		<h2 id="preview-title">Live Preview</h2>
 	
-		<div class="preview container-fluid">
+		<div id="live-preview" class="preview container-fluid">
 	
 		<pre class="p-label" id="free-options-p">
 
@@ -666,10 +673,23 @@
 		}
 	});
 	
+	// Custom input live preview
+	$(document).on("keyup", ".custom", function() {
+		var oldId = $(this).attr("id");
+		var newId = oldId + "-p";
+		var inpt = $(this).val();
+		if (inpt == "") {
+			$("#" + newId).css("display", "none");
+		} else {
+			$("#" + newId).css("display", "block");
+			$("#" + newId).html(inpt);
+		}
+	});
+	
 	
 	// Highlight label
 	var lastHovered = null;
-	$(".input-group").mouseover(function() {
+	$(document).on("mouseover", ".input-group", function() {
 		var oldId = $(this).attr("id");
 		var splitId = oldId.split("-");
 		var toHighlight = $("#" + splitId[0] + "-p");
@@ -688,7 +708,7 @@
 	});
 	
 	// Remove highlight on label
-	$(".input-group").mouseout(function() {
+	$(document).on("mouseout", ".input-group", function() {
 		var oldId = $(this).attr("id");
 		var splitId = oldId.split("-");
 		var toHighlight = $("#" + splitId[0] + "-p");
@@ -882,5 +902,20 @@
 		
 		return data;
 	}
+	
+	
+	var customFieldIdx = 0;
+	$("#add-custom-option").click(function() {
+		var newId = "custom_option_" + customFieldIdx;
+		var customField = '<div id="' + newId + '-hl" class="input-group">\n';
+		customField += '<span class="input-group-addon">' + newId + '</span>';
+		customField += '<input type="text" id="' + newId + '" class="custom form-control">\n';
+		customField += '</div>';
+		customFieldIdx++;
+		$("#custom-fields").append(customField);
+		var customLabel = '<div class="p-label" id="' + newId + '-p" style="display: none;">\n\n</div>';
+		$("#live-preview").append(customLabel);
+	});
+	
 </script>
 {% endblock %}
