@@ -13,9 +13,6 @@
     .container {
         padding-top: 10px;
     }
-    .btn {
-
-	}
     
 	body {
         background-image: url('/static/img/background.jpg');
@@ -30,7 +27,7 @@
     }
     
 	.panel {
-        border-bottom: 1px solid white;
+        /*border-bottom: 1px solid white;*/
     }
 	
 	.listbox {
@@ -92,6 +89,103 @@
 		margin-bottom: 1px;
 	}
 	
+	#status-field {
+		font-weight: 900;
+		text-indent: 10px;
+		text-align: center;
+	}
+	
+	#action-hub {
+		padding-top: 10px;
+		margin-top: 7px;
+		height: 185px;
+	}
+	
+	#action-hub button {
+		min-width: 130px;
+	}
+	
+	.fa-gear {
+		font-size: 150%;
+	}
+	
+	.modal {
+		display: none; /* Hidden by default */
+		position: fixed; /* Stay in place */
+		z-index: 9999; /* Sit on top */
+		padding-top: 100px; /* Location of the box */
+		left: 0;
+		top: 0;
+		width: 100%; /* Full width */
+		height: 100%; /* Full height */
+		overflow: auto; /* Enable scroll if needed */
+		background-color: rgb(0,0,0); /* Fallback color */
+		background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+	}
+
+	/* Modal Content */
+	.modal-content {
+		position: relative;
+		background-color: #fefefe;
+		margin: auto;
+		padding: 0;
+		border: 1px solid #888;
+		width: 60%;
+		box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
+		-webkit-animation-name: animatetop;
+		-webkit-animation-duration: 0.4s;
+		animation-name: animatetop;
+		animation-duration: 0.4s
+		color: black;
+	}
+	
+	.modal-content input {
+		width: 50%;
+	}
+
+	/* Add Animation */
+	@-webkit-keyframes animatetop {
+		from {top:-300px; opacity:0} 
+		to {top:0; opacity:1}
+	}
+
+	@keyframes animatetop {
+		from {top:-300px; opacity:0}
+		to {top:0; opacity:1}
+	}
+
+	/* The Close Button */
+	.close {
+		color: white;
+		float: right;
+		font-size: 28px;
+		font-weight: bold;
+	}
+
+	.close:hover,
+	.close:focus {
+		color: #000;
+		text-decoration: none;
+		cursor: pointer;
+	}
+
+	.modal-header {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+
+	.modal-body {
+		padding: 2px 16px;
+		color: black;
+	}
+
+	.modal-footer {
+		padding: 2px 16px;
+		background-color: #5cb85c;
+		color: white;
+	}
+	
 </style>
 
 <body>
@@ -99,6 +193,30 @@
 
 		{% if user.is_authenticated %}
         
+		
+			<div id="delete-project-confirm" class="modal">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h2 style="padding: 5px;">Delete Project</h2>
+						<span class="close">&times;</span>
+					</div>
+					<div class="modal-body">
+						<div class="container block-center">
+							<h3>Are you sure you want to delete the project:</h3>
+							<br>
+							<h3 id="delete-project-confirm-display" style="font-family: monospace"></h3>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<div class="container text-center" style="padding: 10px;">
+							<button id="delete-confirm-btn" class="btn btn-danger">Delete</button>
+							<button id="cancel-delete" class="btn btn-secondary">Cancel</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		
+		
 			<div class="row">
 			<div class="left col-md-3 col-sm-4">
 				<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">My Projects</h1>
@@ -115,32 +233,52 @@
 						
 					</div>
 				</div>
-				
-				<br>
-				
-				<div class="text-center">
-					<div style="margin-right: 5%; display: inline-block;" class="dropdown">
-						<button id="vis-menu" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>Visualizations</button>
-						<span class="caret"></span></button>
-						<ul class="dropdown-menu">
-							<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
-							<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
-						</ul>
-					</div>
-					<button id="download-project" class="btn btn-success" type="button" disabled>Download Project</button>
-				
-					<br><br>
-				
-					<div class="input-group" style="width: 100%;">
-						<div class="input-group-prepend">
-							<button class="btn btn-secondary" type="button" disabled>Check Status</button>
-						</div>
-					  <input type="text" class="form-control" readonly>
-					</div>
+								
+				<div id="action-hub" style="display: none">
+					<table class="table" style="border: 1px solid white;">
+						<tbody>
+						
+							<tr>
+								<th>
+									<button id="check-status" class="btn btn-primary" type="button"><span id="loading-icon-status">Check Status</span></button>
+								</th>
+								<th>
+									<input id="status-field" type="text" class="form-control" readonly>
+									
+								</th>
+							</tr>
+							
+							<tr>
+								<td>
+									<div style="" class="dropdown">
+										<button id="vis-menu" class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" disabled>Visualize</button>
+										<span class="caret"></span></button>
+										<ul class="dropdown-menu">
+											<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
+											<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
+										</ul>
+									</div>
+								</td>
+								<td>
+									<button id="download-project" class="btn btn-primary" type="button" disabled>Download</button>
+								</td>
+							</tr>
+							
+							<tr>
+								<td>
+									<button id="edit-project" class="btn btn-primary" type="button" disabled>Edit Project</button>
+								</td>
+								<td>
+									<button id="delete-project" class="btn btn-danger" type="button">Delete Project</button>
+								</td>
+							</tr>
+							
+						</tbody>
+					</table>			
 				
 				</div>
 				
-				</div> <!-- left column -->
+			</div> <!-- left column -->
 				
 				
 								
@@ -150,7 +288,7 @@
 				
 				<div class="col-md-9 col-sm-12">
 				
-					<h1 class="display-4 size-override" style="border-bottom: 1px solid white;">File Preview<span id="filename" style="display:none;">test</span></h1>
+					<h1 class="display-4 size-override" style="border-bottom: 1px solid white;"><span id="projectname">File Preview</span><span id="filename" style="display:none;">test</span></h1>
 				
 					<div id="preview" class="pt-0 mt-0 preview container-fluid" style="">
 
@@ -289,6 +427,7 @@
 	// Get project structure
 	$(function() {
 		$("#projects").change(function() {
+			var projectName = $("#projects").val();
 			$.ajax({type: "POST",
 					url: "/user",
 					dataType: "json",
@@ -299,11 +438,25 @@
 						{
 							
 							$("#file-preview").css("display", "none");
-							$("#file-system").css("display", "visible");
+							$("#file-system").css("display", "block"); /////////
 							$("#vis-menu").attr("disabled", false);
 							$("#download-project").attr("disabled", false);
+							$("#action-hub").css("display", "block");
+							$("#projectname").html(projectName);
 							
-							structure = response;
+							if (response.status == "PENDING") {
+								$("#status-field").css("background-color", "yellow");
+							} else if (response.status == "RUNNING") {
+								$("#status-field").css("background-color", "blue");
+							} else if (response.status == "COMPLETED") {
+								$("#status-field").css("background-color", "green");
+							} else if (response.status == "FAILED") {
+								$("#status-field").css("background-color", "red");
+							} else {
+								$("#status-field").css("background-color", "red");
+							}
+							$("#status-field").val(response.status);
+							structure = response.structure;
 							path = [];
 							updatePreview(); 
 							
@@ -360,7 +513,7 @@
 							$("#file-contents").html(response);
 							$("#file-system").hide();
 							$("#file-preview").show();
-							$("#filename").text(" - " + filename);
+							$("#filename").text("/" + filename);
 							$("#filename").show();
 						}
 			});
@@ -377,7 +530,74 @@
 		});
 	});
 	
+	
+	// Check job status
+	$("#check-status").click(function() {
+		$(this).prop("disabled", true);
+		$("#loading-icon-status").html('<i class="fa fa-gear fa-spin" aria-hidden="true"></i>');
+		$.ajax({type: "POST",
+				url: "/user",
+				dataType: "json",
+				data: {type: "status",
+						project: $("#projects").val(),
+						csrfmiddlewaretoken: '{{ csrf_token }}'},
+				success: function(response)
+					{
+						$("#check-status").prop("disabled", false);
+						$("#loading-icon-status").html("Check Status");
+						if (response == "PENDING") {
+							$("#status-field").css("background-color", "yellow");
+						} else if (response == "RUNNING") {
+							$("#status-field").css("background-color", "blue");
+						} else if (response == "COMPLETED") {
+							$("#status-field").css("background-color", "green");
+						} else if (response == "FAILED") {
+							$("#status-field").css("background-color", "red");
+						} else {
+							$("#status-field").css("background-color", "red");
+						}
+						$("#status-field").val(response);
+					},
+				error: function(response)
+					{
+						$("#loading-icon-status").html("Check Status");
+						$("#check-status").prop("disabled", false);
+					}
+		});
+	});
+	
+	// Delete project
+	$("#delete-project").click(function() {
+		$("#delete-confirm-btn").prop("disabled", false);
+		$("#delete-project-confirm-display").html($("#projects").val());
+		$("#delete-project-confirm").css("display", "block");
+	});
+	
+	// Confirm project deletion
+	$("#delete-confirm-btn").click(function() {
+		$(this).prop("disabled", true);
+		$.ajax({type: "POST",
+				url: "/user",
+				dataType: "json",
+				data: {type: "delete",
+						project: $("#projects").val(),
+						csrfmiddlewaretoken: '{{ csrf_token }}'},
+				success: function(response)
+					{
+						$("#delete-project-confirm").css("display", "none");
+						$("#" + $("#projects").val()).remove();
+						$("#file-system").css("display", "none");
+						$("#file-preview").css("display", "none");
+						$("#action-hub").css("display", "none");
+						$("#projectname").html("File Preview");
+					}
+		});
+	});
 		
+	// X and Cancel buttons on delete confirmation popup
+	$(".close, #cancel-delete").click(function() {
+		$("#delete-project-confirm").css("display", "none");
+	});
 	
 
 </script>

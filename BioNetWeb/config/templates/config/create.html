@@ -175,6 +175,14 @@
 	.fa-times {
 		color: red;
 	}
+	
+	.fa-exclamation-triangle {
+		color: yellow;
+	}
+	
+	.warning {
+		font-size: 80%;
+	}
 	/*
 	table th {
 		border-right: 1px solid gray;
@@ -185,72 +193,125 @@
 <div class="container-fluid">
 
 	<div class="row">
+	
+		<div class="col sm-12">
+			{% for warning in warnings %}
+				{% include "home/warning.html" with w=warning %}
+			{% endfor %}
+			{% if warnings|length > 0 %}
+				<br>
+			{% endif %}
+		</div>
+	
+	</div>
 
+
+	<div class="row">
+	
+	
+	
 	
 	{% if user.is_authenticated and request.user|has_group:"monsoon" %}
 	
-	<div id="monsoon-confirm" class="modal">
+		{% if project_limit_reached %}
+		<div id="monsoon-confirm" class="modal">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
+					<span class="close">&times;</span>
+				</div>
+				<div class="modal-body">
+					<div class="container block-center">
+						<h2>You have reached the maximum allowed number of projects.</h2>
+					</div>
+				</div>
+				<div class="modal-footer">
+				</div>
+			</div>
+		</div>
 
+		{% else %}
+		<div id="monsoon-confirm" class="modal">
+
+			<div class="modal-content">
+				<div class="modal-header">
+					<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
+					<span class="close">&times;</span>
+				</div>
+				
+				<div class="modal-body">
+					<div class="container block-center">
+				
+						<table class="table">
+							<tbody>
+								<tr>
+									<th style="width: 30%" scope="row">Project Name</th>
+									<td style="width: 40%"><input id="project_name-modal" class="modal-field form-control" type="text"></td>
+									<td style="width: 15%"></td> <!-- Placeholder for submit button for uploading exp -->
+									<td class="modal-check" id="project_name-check"></td> <!-- Green checkmark for OK, Red X for not OK -->
+								</tr>
+								<tr>
+									<td style="width: 30%">Max Memory (GB)</td>
+									<td style="width: 40%"><input id="memory-modal" class="modal-field form-control" type="text"></td>
+									<td style="width: 15%"></td>
+									<td class="modal-check" id="memory-check"></td>
+								</tr>
+								<tr>
+									<td style="width: 30%">Max Walltime</td>
+									<td style="width: 40%"><input id="walltime-modal" class="modal-field form-control" type="text" readonly></td>
+									<td style="width: 15%"></td>
+									<td class="modal-check" id="walltime-check"></td>
+								</tr>
+								<tr>
+									<td style="width: 30%">Parallel Count</td>
+									<td style="width: 40%"><input id="parallel_count-modal" class="modal-field form-control" type="text" readonly></td>
+									<td style="width: 15%"></td>
+									<td class="modal-check" id="parallel_count-check"></td>
+								</tr>
+								<tr>
+									<td style="width: 30%">BNGL File</td>
+									<td style="width: 40%"><input id="bngl-modal" class="modal-field form-control" type="text" readonly></td>
+									<td style="width: 15%"></td>
+									<td class="modal-check" id="bngl-check"></td>
+								</tr>
+								<tr>
+									<td style="width: 30%">EXP File</td>
+									<td style="width: 40%"><input id="exp-modal" class="modal-field form-control" type="text" readonly></td>
+									<td style="width: 15%"><input id="exp-upload_input" class="form-control-sm" type="file" accept=".exp" style="display: none">
+									<input id="exp-upload" value="Upload" class="form-control-sm col-8" type="button" style="display: none" onclick='document.getElementById("exp-upload_input").click();'></td>
+									<td class="modal-check" id="exp-check"></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<div class="container text-center" style="padding: 10px;">
+						<button id="cancel-monsoon" class="btn btn-danger">Cancel</button>
+						<button id="submit-monsoon" class="btn btn-primary">Submit</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+		
+		{% endif %}
+	
+	{% elif not user.is_authenticated %}
+	<div id="monsoon-confirm" class="modal">
 		<div class="modal-content">
 			<div class="modal-header">
 				<h2 style="padding: 5px;">Run BioNetFit on Monsoon</h2>
 				<span class="close">&times;</span>
 			</div>
-			
 			<div class="modal-body">
 				<div class="container block-center">
-			
-					<table class="table">
-						<tbody>
-							<tr>
-								<th style="width: 30%" scope="row">Project Name</th>
-								<td style="width: 40%"><input id="project_name-modal" class="modal-field form-control" type="text"></td>
-								<td style="width: 15%"></td> <!-- Placeholder for submit button for uploading exp -->
-								<td class="modal-check" id="project_name-check"></td> <!-- Green checkmark for OK, Red X for not OK -->
-							</tr>
-							<tr>
-								<td style="width: 30%">Max Memory (GB)</td>
-								<td style="width: 40%"><input id="memory-modal" class="modal-field form-control" type="text"></td>
-								<td style="width: 15%"></td>
-								<td class="modal-check" id="memory-check"></td>
-							</tr>
-							<tr>
-								<td style="width: 30%">Max Walltime</td>
-								<td style="width: 40%"><input id="walltime-modal" class="modal-field form-control" type="text" readonly></td>
-								<td style="width: 15%"></td>
-								<td class="modal-check" id="walltime-check"></td>
-							</tr>
-							<tr>
-								<td style="width: 30%">Parallel Count</td>
-								<td style="width: 40%"><input id="parallel_count-modal" class="modal-field form-control" type="text" readonly></td>
-								<td style="width: 15%"></td>
-								<td class="modal-check" id="parallel_count-check"></td>
-							</tr>
-							<tr>
-								<td style="width: 30%">BNGL File</td>
-								<td style="width: 40%"><input id="bngl-modal" class="modal-field form-control" type="text" readonly></td>
-								<td style="width: 15%"></td>
-								<td class="modal-check" id="bngl-check"></td>
-							</tr>
-							<tr>
-								<td style="width: 30%">EXP File</td>
-								<td style="width: 40%"><input id="exp-modal" class="modal-field form-control" type="text" readonly></td>
-								<td style="width: 15%"><input id="exp-upload_input" class="form-control-sm" type="file" accept=".exp" style="display: none">
-								<input id="exp-upload" value="Upload" class="form-control-sm col-8" type="button" style="display: none" onclick='document.getElementById("exp-upload_input").click();'></td>
-								<td class="modal-check" id="exp-check"></td>
-							</tr>
-						</tbody>
-					</table>
+					<h2>Not logged in -- can't use Monsoon</h2>
 				</div>
 			</div>
 			<div class="modal-footer">
-				<div class="container text-center" style="padding: 10px;">
-					<button id="cancel-monsoon" class="btn btn-danger">Cancel</button>
-					<button id="submit-monsoon" class="btn btn-primary">Submit</button>
-				</div>
 			</div>
 		</div>
-
 	</div>
 	
 	{% elif not request.user|has_group:"monsoon" %}
@@ -278,7 +339,7 @@
 			</div>
 			<div class="modal-body">
 				<div class="container block-center">
-					<h2>Not logged in.</h2>
+					<h2>An error has occurred. You cannot use Monsoon.</h2>
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -286,6 +347,7 @@
 		</div>
 	</div>
 	{% endif %}
+	
 	
 	<div class="left col-md-4 col-sm-8">
 

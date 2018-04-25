@@ -36,6 +36,18 @@ def index(request):
             else:
                 exp = ''
 
+
+            warnings = []
+            project_limit_reached = False
+            if request.user.is_authenticated:
+                if not request.user.groups.filter(name="monsoon").exists():
+                    warnings.append("Your account is not approved -- you will not be able to run BioNetFit on Monsoon.")
+                if get_num_projects(str(request.user)) >= limits.NUM_PROJECTS_LIMIT:
+                    warnings.append("You have reached the maximum allowed number of projects -- you will not be able to run BioNetFit on Monsoon.")
+                    project_limit_reached = True
+            else:
+                warnings.append("You are not logged in -- you will not be able to run BioNetFit on Monsoon.")
+
             return render(request, 'config/create.html', {'observables': observables,
                                                           'bngl': bngl,
                                                           'exp': exp,
@@ -51,7 +63,9 @@ def index(request):
                                                           'memory_limit': limits.MEMORY_LIMIT,
                                                           'walltime_limit': limits.WALLTIME_LIMIT,
                                                           'name_length_limit': limits.NAME_LENGTH_LIMIT,
-                                                          'parallel_count_limit': limits.PARALLEL_COUNT_LIMIT})
+                                                          'parallel_count_limit': limits.PARALLEL_COUNT_LIMIT,
+                                                          'warnings': warnings,
+                                                          'project_limit_reached': project_limit_reached})
 
 
     return render(request, 'home/index.html')
@@ -72,7 +86,7 @@ def add_project(username, project_name):
     project_name = to_mongo_key(project_name)
     users = establish_db_connect()
     key = "projects.{}".format(project_name)
-    structure = {"slurm_id": None, "input_files": {}, "output_files": {}}
+    structure = {"status": None, "slurm_id": None, "input_files": {}, "output_files": {}}
     users.update({'user': username}, {'$set': {key: structure}})
 
 def get_projects(username):
@@ -80,6 +94,23 @@ def get_projects(username):
     users = establish_db_connect()
     for user in users.find({"user": username}):
         return user.get("projects")
+
+def delete_project(username, project_id):
+    slurm_id = get_slurm_id(username, project_id)
+
+    # Delete project on MongoDB
+    username_mongo = to_mongo_key(username)
+    project_id_mongo = to_mongo_key(project_id)
+    key = "projects.{}".format(project_id_mongo)
+    users = establish_db_connect()
+    users.update({'user': username_mongo}, {'$unset': {key: ''}})
+
+    # Delete project on Monsoon
+    project_dir = os.path.join(bnw_paths.Paths.output, username, project_id).replace("\\", "/")
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    stdin, stdout, stderr = ssh.execute("scancel {}".format(slurm_id))  # Cancel job
+    stdin, stdout, stderr = ssh.execute("rm -r {}".format(project_dir)) # Delete project directory
+    ssh.__del__()
 
 def add_input_file(username, project_name, file_name, contents):
     username = to_mongo_key(username)
@@ -117,6 +148,50 @@ def set_slurm_id(username, project_name, slurm_id):
     key = "projects.{}.{}".format(project_name, "slurm_id")
     structure = str(slurm_id)
     users.update({'user': username}, {'$set': {key: structure}})
+
+
+def get_slurm_id(username, project_name):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        return user["projects"][project_name]["slurm_id"]
+
+
+def set_last_status_time(username):
+    username = to_mongo_key(username)
+    users = establish_db_connect()
+    users.update({"user": username}, {"$set": {"last_check": int(time.time())}})
+
+
+def get_last_status_time(username):
+    username = to_mongo_key(username)
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        return user["last_check"]
+
+
+def set_status(username, project_name, status):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    users = establish_db_connect()
+    key = "projects.{}.{}".format(project_name, "status")
+    users.update({'user': username}, {'$set': {key: str(status)}})
+
+
+def get_status(username, project_name):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        return user["projects"][project_name]["status"]
+
+
+def get_num_projects(username):
+    username = to_mongo_key(username)
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        return len(user["projects"])
 
 
 def get_free_parameters(contents):
@@ -271,6 +346,7 @@ def user(request):
         if not request.user.groups.filter(name="monsoon").exists():
             return HttpResponse()
 
+
         if "type" in request.POST:
 
             # Get project contents
@@ -286,8 +362,8 @@ def user(request):
                     output_dir = os.path.join(bnw_paths.Paths.output, user, project_id, "{}_{}".format(user, project_id)).replace("\\", "/")
                     output_structure = get_output_structure(user, project_id, output_dir)
                     set_output_structure(user, project_id, output_structure)
-                           
-                return HttpResponse(json.dumps(projects[project_id]))
+
+                return HttpResponse(json.dumps({"structure": projects[project_id], "status": get_status(user, project_id)}))
 
             # Get file contents
             elif request.POST.get("type") == "file":
@@ -304,6 +380,34 @@ def user(request):
                 
                 return HttpResponse(json.dumps(file_contents))
 
+
+            # Get job status
+            elif request.POST.get("type") == "status":
+                project_name = request.POST.get("project")
+                username = str(request.user)
+                if int(time.time()) - get_last_status_time(username) < limits.STATUS_RATE_LIMIT:
+                    return HttpResponse("")
+                slurm_id = get_slurm_id(username, project_name)
+                status = check_job_status(slurm_id)
+                set_last_status_time(username)
+                if status == get_status(username, project_name):
+                    return HttpResponse(json.dumps(status))
+                set_status(username, project_name, status)
+                
+                # Update files in MongoDB
+                output_dir = os.path.join(bnw_paths.Paths.output, username, project_name, "{}_{}".format(username, project_name)).replace("\\", "/")
+                output_structure = get_output_structure(username, project_name, output_dir)
+                set_output_structure(username, project_name, output_structure)
+                
+                return HttpResponse(json.dumps(status))
+
+
+            elif request.POST.get("type") == "delete":
+                project_name = request.POST.get("project")
+                username = str(request.user)
+                delete_project(username, project_name)
+                return HttpResponse(json.dumps("success"))
+
                 
 
         # User is running a job on Monsoon
@@ -313,6 +417,10 @@ def user(request):
                 return HttpResponse()
 
             if not request.user.groups.filter(name="monsoon").exists():
+                return HttpResponse()
+
+            user = str(request.user)
+            if get_num_projects(user) >= limits.NUM_PROJECTS_LIMIT:
                 return HttpResponse()
             
             # Use seconds past epoch for unique job name if project name is not valid
@@ -346,7 +454,7 @@ def user(request):
             bngl_name = html.unescape(request.POST.get("bnglName"))
             exp_name = html.unescape(request.POST.get("expName"))
             
-            user = str(request.user)
+            
             # /scratch/jng86/bnw/[user]/[unique_project_id]
             location = os.path.join(bnw_paths.Paths.output, user, project_id).replace("\\", "/")
             bngl_loc = os.path.join(location, bngl_name).replace("\\", "/")
@@ -358,9 +466,8 @@ def user(request):
             
             conf = modify_conf(conf, project_id, location, bngl_loc, exp_loc, job_name)
 
-            # TODO walltime, ntasks
+            # Create .sh file
             sbatch = bnw_paths.Paths.make_sbatch(job_name, location, project_id, walltime, memory, int(parallel_count)+1, conf_loc)
-
             sbatch_loc = os.path.join(location, project_id + ".sh").replace("\\", "/")
 
             # Establish SSH connection
@@ -386,7 +493,11 @@ def user(request):
 
             stdin, stdout, stderr = ssh.execute("sbatch {}".format(sbatch_loc))
 
-            job_id = stdout[0].split()[-1]
+
+            if len(stdout) == 2:
+                job_id = stdout[1].split()[-1].strip()
+            else:
+                job_id = stdout[0].split()[-1].strip()
 
             # Close SSH and SFTP connections
             ssh.__del__()
@@ -397,7 +508,11 @@ def user(request):
                 map(lambda x: x.replace(".", bnw_paths.Paths.delimiter),
                     [conf_name, bngl_name, exp_name]), [conf, bngl, exp]):
                 add_input_file(user, project_id, filename, contents)
+
             set_slurm_id(user, project_id, job_id)
+            #set_status(user, project_id, check_job_status(job_id))
+            set_status(user, project_id, "PENDING")
+            
 
             return HttpResponse(json.dumps("success"))
 
@@ -411,6 +526,21 @@ def user(request):
     else:
         return render(request, 'home/user.html')
 
+
+def check_job_status(slurm_id):
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    stdin, stdout, stderr = ssh.execute("pwd")
+    stdin, stdout, stderr = ssh.execute("jobstats -P -j {}".format(slurm_id))
+    ssh.__del__()
+    if len(stdout) == 0:
+        return ""
+    elif len(stdout) == 1:
+        if stdout[0].startswith("JobID"):
+            return ""
+        return stdout[0].split("|")[-1].strip()
+    else:
+        return stdout[1].split("|")[-1].strip()
+    
 
 def project_name_is_valid(project_name):
     if len(project_name) > limits.NAME_LENGTH_LIMIT:
@@ -735,3 +865,6 @@ def download_project(request):
 def download_project_polynomial():
     with open(os.path.join("home", "polynomial.pickle"), "rb") as infile:
         return pickle.load(infile)
+
+
+
