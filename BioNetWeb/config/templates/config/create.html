@@ -917,5 +917,35 @@
 		$("#live-preview").append(customLabel);
 	});
 	
+	
+	$(document).ready(function() {
+		var optionFields = jQuery.parseJSON('{{ option_fields|safe }}');
+		console.log(optionFields);
+
+		jQuery.each(optionFields, function(key, value) {
+			if (value.length == 0) {
+				$("#add-custom-option").click();
+				$("#custom_option_" + (customFieldIdx - 1)).val(key);
+			} else {
+				var match = $("#" + key);
+				switch (match.attr("class").split(/\s+/)[0]) {
+					case "normal":
+						console.log(key, value);
+						break;
+					case "bool":
+						console.log(key, value);
+						break;
+					case "listbox":
+						console.log(key, value);
+						break;
+					case "free":
+						console.log(key, value);
+						break;
+				}
+			}
+		});
+	});
+	
+	
 </script>
 {% endblock %}
