@@ -256,6 +256,7 @@
 										<ul class="dropdown-menu">
 											<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
 											<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
+											<li><div id="Fit-Value" class="visualization btn-info nav-link">Fit-Value</div></li>
 										</ul>
 									</div>
 								</td>
@@ -266,7 +267,7 @@
 							
 							<tr>
 								<td>
-									<button id="edit-project" class="btn btn-primary" type="button" disabled>Edit Project</button>
+									<button id="edit-project"  class="btn btn-primary" type="button">Edit Project</button>
 								</td>
 								<td>
 									<button id="delete-project" class="btn btn-danger" type="button">Delete Project</button>
@@ -337,6 +338,8 @@
 				var url = "/bestfit_plot?p=" + $("#projects").val();
 			} else if (visual_type == "Generational") {
 				var url = "/generational_plot?p=" + $("#projects").val();
+			} else if (visual_type == "Fit-Value") {
+				var url = "/fitval_plot?p=" + $("#projects").val();
 			} else {
 				return;
 			}
@@ -597,6 +600,34 @@
 	// X and Cancel buttons on delete confirmation popup
 	$(".close, #cancel-delete").click(function() {
 		$("#delete-project-confirm").css("display", "none");
+	});
+	
+	
+	// Edit project
+	$("#edit-project").click(function() {
+	
+		var form = $('<form></form>');
+
+		form.attr("method", "post");
+		form.attr("action", "/");
+		var parameters = {submit_create: true,
+						edit: true,
+						project: $("#projects").val(),
+						csrfmiddlewaretoken: '{{ csrf_token }}'};
+		
+		$.each(parameters, function(key, value) {
+			var field = $('<input></input>');
+
+			field.attr("type", "hidden");
+			field.attr("name", key);
+			field.attr("value", value);
+
+			form.append(field);
+		});
+
+		$(document.body).append(form);
+		form.submit();
+
 	});
 	
 
