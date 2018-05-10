@@ -13,6 +13,7 @@ from . import bnw_paths
 from . import polynomial
 from . import secret_login
 from . import ssh_connection
+from . import forms
 
 import zipfile
 import pickle
@@ -25,16 +26,50 @@ import io
 def index(request):
     if request.method == 'POST':
         if 'submit_create' in request.POST:
-            bngl_file = request.FILES.get('bngl', '')
-            exp_file = request.FILES.get('exp', '')
-            if not bngl_file:
-                return HttpResponse()
-            observables, bngl = get_free_parameters(bngl_file.file)
+            if 'edit' in request.POST:
+                project_id = request.POST.get('project', '')
+                if not project_id:
+                    return HttpResponse()
+                username = str(request.user)
 
-            if exp_file:
-                exp = get_file_contents(exp_file.file)
+                bngl_file = get_file_name_by_ext(username, project_id, ['input_files'], 'bngl')
+                exp_file = get_file_name_by_ext(username, project_id, ['input_files'], 'exp')
+
+                bngl = get_file(username, project_id, ['input_files', bngl_file])
+                exp = get_file(username, project_id, ['input_files', bngl_file])
+
+                observables = get_free_parameters_str(bngl)
+
+                conf_file = get_file_name_by_ext(username, project_id, ['input_files'], 'conf')
+                conf = get_file(username, project_id, ['input_files', conf_file])
+
+                option_fields = {}
+                for line in conf.split('\n'):
+                    if not line or line.startswith("#"):
+                        continue
+                    if '=' in line:
+                        fields = line.split('=')
+                        if fields[0] in option_fields:
+                            option_fields[fields[0]].append(fields[1].strip())
+                        else:
+                            option_fields[fields[0]] = [fields[1].strip()]
+                    else:
+                        option_fields[line.strip()] = []
+                
+
             else:
-                exp = ''
+                bngl_file = request.FILES.get('bngl', '')
+                exp_file = request.FILES.get('exp', '')
+                if not bngl_file:
+                    return HttpResponse()
+                observables, bngl = get_free_parameters(bngl_file.file)
+
+                if exp_file:
+                    exp = get_file_contents(exp_file.file)
+                else:
+                    exp = ''
+
+                option_fields = {}
 
 
             warnings = []
@@ -47,7 +82,7 @@ def index(request):
                     project_limit_reached = True
             else:
                 warnings.append("You are not logged in -- you will not be able to run BioNetFit on Monsoon.")
-
+            print(json.dumps(option_fields))
             return render(request, 'config/create.html', {'observables': observables,
                                                           'bngl': bngl,
                                                           'exp': exp,
@@ -65,7 +100,8 @@ def index(request):
                                                           'name_length_limit': limits.NAME_LENGTH_LIMIT,
                                                           'parallel_count_limit': limits.PARALLEL_COUNT_LIMIT,
                                                           'warnings': warnings,
-                                                          'project_limit_reached': project_limit_reached})
+                                                          'project_limit_reached': project_limit_reached,
+                                                          'option_fields': json.dumps(option_fields)})
 
 
     return render(request, 'home/index.html')
@@ -139,7 +175,20 @@ def get_file(username, project_name, path):
         for p in path:
             current_level = current_level[p]
         return current_level
-    
+
+def get_file_name_by_ext(username, project_name, path, ext):
+    username = to_mongo_key(username)
+    project_name = to_mongo_key(project_name)
+    path = list(map(lambda x: to_mongo_key(x), path))
+    users = establish_db_connect()
+    for user in users.find({"user": username}):
+        current_level = user["projects"][project_name]
+        for p in path:
+            current_level = current_level[p]
+        for item in current_level:
+            if item.endswith(ext):
+                return item
+
 
 def set_slurm_id(username, project_name, slurm_id):
     username = to_mongo_key(username)
@@ -195,14 +244,21 @@ def get_num_projects(username):
 
 
 def get_free_parameters(contents):
-   out = []
-   file = ''
-   for line in contents:
-       file += line.decode('ascii')
-       if "__FREE__" in line.decode('ascii'):
-           out.append(line.decode('ascii').strip().split()[0])
-   return out, file
+    out = []
+    file = ''
+    for line in contents:
+        file += line.decode('ascii')
+        if "__FREE__" in line.decode('ascii'):
+            out.append(line.decode('ascii').strip().split()[0])
+    return out, file
 
+
+def get_free_parameters_str(contents):
+    out = []
+    for line in contents.split("\n"):
+       if "__FREE__" in line:
+           out.append(line.strip().split()[0])
+    return out
 
 
 def get_file_contents(contents):
@@ -217,8 +273,10 @@ def about(request):
     return render(request, 'home/about.html')
 
 
-
+'''
 def login(request):
+    if request.user.is_authenticated:
+        return HttpRedirect("/")
     if request.method == 'POST':
         username = request.POST.get('nickname', '')
         password = request.POST.get('password', '')
@@ -227,7 +285,7 @@ def login(request):
             if user.is_active:
                 request.session.set_expiry(86400)
     return render(request, 'home/login.html')
-
+'''
 
 
 def feedback(request):
@@ -236,6 +294,7 @@ def feedback(request):
 
 def resources(request):
     return render(request, 'home/resources.html')
+
 
 def example(request):
     if request.method == 'POST':
@@ -467,7 +526,7 @@ def user(request):
             conf = modify_conf(conf, project_id, location, bngl_loc, exp_loc, job_name)
 
             # Create .sh file
-            sbatch = bnw_paths.Paths.make_sbatch(job_name, location, project_id, walltime, memory, int(parallel_count)+1, conf_loc)
+            sbatch = bnw_paths.Paths.make_sbatch(job_name, location, project_id, walltime, memory, int(parallel_count)+1, conf_loc, exp_loc, os.path.join(location, job_name, bngl_name.replace("bngl", "gdat")).replace("\\", "/"))
             sbatch_loc = os.path.join(location, project_id + ".sh").replace("\\", "/")
 
             # Establish SSH connection
@@ -622,29 +681,15 @@ def check_exists_monsoon(fullpath):
 
 
 def get_bestfit_data(gdat_path, exp_path, output_dir):
-
     bestfit = "{}/{}".format(output_dir, bnw_paths.Paths.bestfit_data)
     exp = "{}/{}".format(output_dir, bnw_paths.Paths.exp_data)
     obv = "{}/{}".format(output_dir, bnw_paths.Paths.obv_names)
 
     if not all([check_exists_monsoon(path) for path in [bestfit, exp, obv]]):
+         return ["", "", ""]
 
-        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
-        stdin, stdout, stderr = ssh.execute("pwd")
-        stdin, stdout, stderr = ssh.execute("module load anaconda/3.latest")
-        stdin, stdout, stderr = ssh.execute("python {} {} {} {}".format(bnw_paths.Paths.bestfit_plot_script,
-                                                                        gdat_path,
-                                                                        exp_path,
-                                                                        output_dir))
-        if len(stderr) > 0:
-            ssh.__del__()
-            return ["", "", ""]
-
-
-    else:
-        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
         
-    #stdout.channel.recv_exit_status()
     sftp = ssh.ssh.open_sftp()
     try:
         best_csv = io.BytesIO()
@@ -689,29 +734,17 @@ def bestfit_plot(request):
 
 
 
-def get_generational_data(exp_path, output_dir):
-    # Establish SSH connection
-
+def get_generational_data(output_dir):
     bestfit = "{}/{}".format(output_dir, bnw_paths.Paths.bestfit_data)
     avg = "{}/{}".format(output_dir, bnw_paths.Paths.avg_data)
     exp = "{}/{}".format(output_dir, bnw_paths.Paths.exp_data)
     obv = "{}/{}".format(output_dir, bnw_paths.Paths.obv_names)
 
     if not all([check_exists_monsoon(path) for path in [bestfit, avg, exp, obv]]):
-        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
-        stdin, stdout, stderr = ssh.execute("pwd")
-        stdin, stdout, stderr = ssh.execute("module load anaconda/3.latest")
-        stdin, stdout, stderr = ssh.execute("python {} {} {}".format(bnw_paths.Paths.bestfit_plot_script,
-                                                                     exp_path,
-                                                                     output_dir))
-        if len(stderr) > 0:
-            ssh.__del__()
-            return ["", "", "", ""]
+        return ["", "", "", ""]
 
-    else:
-        ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
     
-    #stdout.channel.recv_exit_status()
     sftp = ssh.ssh.open_sftp()
     try:
         best_csv = io.BytesIO()
@@ -739,10 +772,8 @@ def generational_plot(request):
         return render(request, "home/visualization_error.html", {"message": "The project you requested could not be located."})
 
     output_dir = os.path.join(bnw_paths.Paths.output, username, project_name, "{}_{}".format(username, project_name)).replace("\\", "/")
-    exp_name = get_input_file_name_by_ext("exp", username, project_name)
-    exp_path = os.path.join(bnw_paths.Paths.output, username, project_name, from_mongo_key(exp_name)).replace("\\", "/")
     
-    best_csv, avg_csv, exp_csv, obv_names = get_generational_data(exp_path, output_dir)
+    best_csv, avg_csv, exp_csv, obv_names = get_generational_data(output_dir)
 
     if not all([best_csv, avg_csv, exp_csv, obv_names]):
         return render(request, "home/visualization_error.html", {"message": "The appropriate files could not be found in your BioNetFit project output folder."})
@@ -752,7 +783,52 @@ def generational_plot(request):
     obv_names = obv_names[:-1]
 
     return render(request, "home/generational_plot.html", {"best_data": best_csv, "avg_data": avg_csv, "exp_data": exp_csv, "max_gen": num_gens, "observables": obv_names})
+
+
+def get_fitval_data(output_dir):
+    best_fitvals = "{}/{}".format(output_dir, bnw_paths.Paths.best_fitval_data)
+    avg_fitvals = "{}/{}".format(output_dir, bnw_paths.Paths.avg_fitval_data)
+    obv = "{}/{}".format(output_dir, bnw_paths.Paths.obv_names)
+
+    if not all([check_exists_monsoon(path) for path in [best_fitvals, avg_fitvals, obv]]):
+        return ["", "", ""]
+
+    ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
     
+    sftp = ssh.ssh.open_sftp()
+    try:
+        best_csv = io.BytesIO()
+        avg_csv = io.BytesIO()
+        obv_names = io.BytesIO()
+        sftp.getfo(best_fitvals, best_csv)
+        sftp.getfo(avg_fitvals, avg_csv)
+        sftp.getfo(obv, obv_names)
+    except FileNotFoundError:
+        ssh.__del__()
+        return ["", "", ""]
+
+    tmp = [best_csv, avg_data, obv_names]
+    return [item.getvalue().decode("ascii") for item in tmp]
+
+def fitval_plot(request):
+    username = str(request.user)
+    project_name = str(request.GET.get("p", ""))
+
+    if not project_name:
+        return render(request, "home/visualization_error.html", {"message": "The project you requested could not be located."})
+
+    output_dir = os.path.join(bnw_paths.Paths.output, username, project_name, "{}_{}".format(username, project_name)).replace("\\", "/")
+    
+    best_csv, avg_csv, obv_names = get_fitval_data(output_dir)
+    if not all([check_exists_monsoon(path) for path in [best_csv, avg_csv, obv_names]]):
+        return render(request, "home/visualization_error.html", {"message": "The appropriate files could not be found in your BioNetFit project output folder."})
+
+    obv_names = filter(lambda obv: obv, obv_names.split("\n"))
+    num_gens = obv_names[-1]
+    obv_names = obv_names[:-1]
+
+    return render(request, "home/fitval_plot.html", {"best_data": best_csv, "avg_data": avg_csv, "observables": obv_names})
+
 
 def modify_conf(conf, project_id, location, bngl_loc, exp_loc, job_name):
     
@@ -801,10 +877,10 @@ def admin(request):
 
 def signup(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = forms.RegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            username = form.cleaned_data.get('username')
+            username = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
 
@@ -813,7 +889,7 @@ def signup(request):
             
             return redirect('/')
     else:
-        form = UserCreationForm()
+        form = forms.RegistrationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 
