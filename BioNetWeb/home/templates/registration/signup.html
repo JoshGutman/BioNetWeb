@@ -19,48 +19,59 @@
             float: left;
         }
         .input-group-addon {
-            min-width: 100px;
+            min-width: 20px;
         }
+		
+		.form-control {
+			min-width: 350px;
+			margin-bottom: 10px;
+		}
+		
+		.borderless td, .borderless th {
+			border: none;
+		}
+		
+		.label {
+			font-size: 1.1rem;
+			font-family: "Segoe UI";
+			margin-bottom: 2px;
+		}
+		
+		.error {
+			font-size: 1.1rem;
+			font-family: "Segoe UI";
+			color: red;
+			padding-left: 10px;
+		}
     </style>
     <body>
         <div class="container">
             <div class="col-xs-6r">
                 <h2>Sign up</h2>
-                    <form method="post">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <p>
-                        {{ field.label_tag }}<br>
-                        {{ field }}                            
-                        {% for error in field.errors %}
-                            <p style="color: red">{{ error }}</p>
+				<br>
+				<form method="post">
+					{% csrf_token %}
+					<table>
+					<tbody>
+					{% for field in form %}
+					<tr>
+					<td>
+						<label for="{{ field.name }}" class="label">{{ field.label }}*</label>
+						{{ field }}
+					</td>
+						{% for error in field.errors %}
+						<td>
+                            <!--<p style="color: red">{{ error }}</p>-->
+							<span class="error">{{ error }}</span>
+						</td>
                         {% endfor %}
-                        </p>
-                    {% endfor %} 
-                    <button type="submit">Sign up</button>
-                    </form>
-            </div>
-            <div class="col-xs-6r">
-                <br>
-                <br>
-                    <ul>
-                        <li>Username
-                            <ul>
-                            <li>Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</li>
-                            </ul>
-                        </li>
-                        <li>Password</li>
-                            <ul>
-                                <li>Your password can&#39;t be too similar to your other personal information.</li>
-                                <li>Your password must contain at least 8 characters.</li>
-                                <li>Your password can&#39;t be a commonly used password.</li>
-                                <li>Your password can&#39;t be entirely numeric.</li>
-                            </ul>
-                        <li>Password Confirmation</li>
-                            <ul>
-                                <li>Enter the same password as before, for verification.</li>
-                            </ul>
-                    </ul>
+					{% endfor %}
+					</tr>
+					</tbody>
+					</table>
+					<br>
+					<button class="btn btn-success btn-lg" type="submit">Sign up</button>
+				</form>
             </div>
         </div>
     </body>
