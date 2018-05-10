@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, redirect
 from django.views.generic.edit import FormView
 from pymongo import MongoClient
+from django.core.mail import send_mail, mail_admins
 from django.http import HttpResponse
 from wsgiref.util import FileWrapper
 
@@ -290,6 +291,23 @@ def login(request):
 
 def feedback(request):
     return render(request, 'home/feedback.html')
+
+def thankyou(request):
+    if request.method == 'POST':
+        name = request.POST.get('name', '')
+        email = request.POST.get('email', '')
+        comments = request.POST.get('comments', '')
+        message = 'Name: {}\nEmail: {}\n\nComments:\n{}\n'.format(
+            name,
+            email,
+            comments)
+        if all([name, email, comments]):
+            mail_admins(
+                'BioNetWeb Feedback Received',
+                message,
+                fail_silently=False
+            )
+    return render(request, 'home/thankyou.html')
 
 
 def resources(request):
@@ -883,7 +901,20 @@ def signup(request):
             username = form.cleaned_data.get('email')
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
+            name = form.cleaned_data.get('name')
+            org = form.cleaned_data.get('organization')
 
+            # Email admins about new user
+            message = 'Email: {}\nName: {}\nOrganization: {}\n'.format(
+                username,
+                name,
+                org)
+            mail_admins(
+                'BioNetWeb New User',
+                message,
+                fail_silently=False
+            )
+            
             # Add user to MongoDB
             add_user(username)
             

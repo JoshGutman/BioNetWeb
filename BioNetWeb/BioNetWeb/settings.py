@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 from .settings_secret import *
+from django.core.mail import send_mail
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -129,3 +130,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+ADMINS = (('Josh', 'jng86@nau.edu'),)
+
+DEFAULT_FROM_EMAIL='webmaster@localhost' 
+SERVER_EMAIL='root@localhost' 
+EMAIL_HOST = 'localhost' 
+EMAIL_HOST_USER='' 
+EMAIL_BACKEND ='django.core.mail.backends.smtp.EmailBackend' 
+EMAIL_PORT = 25 #587
+#EMAIL_PORT = 1025
+EMAIL_USE_TLS = False
+EMAIL_SUBJECT_PREFIX = '[BioNetWeb] '

@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^generational_plot*$', views.generational_plot, name='generational_plot'),
     url(r'^fitval_plot*$', views.fitval_plot, name='fitval_plot'),
     url(r'^download_project*$', views.download_project, name='download_project'),
+    path('thankyou', views.thankyou, name='thankyou'),
    # path('admin', views.admin, name='admin'),
 ]
