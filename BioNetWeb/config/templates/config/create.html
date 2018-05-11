@@ -211,7 +211,7 @@
 	
 	
 	
-	{% if user.is_authenticated and request.user|has_group:"monsoon" %}
+	{% if user.is_authenticated and user.can_use_monsoon %}
 	
 		{% if project_limit_reached %}
 		<div id="monsoon-confirm" class="modal">
@@ -314,7 +314,7 @@
 		</div>
 	</div>
 	
-	{% elif not request.user|has_group:"monsoon" %}
+	{% elif not user.can_use_monsoon %}
 	<div id="monsoon-confirm" class="modal">
 		<div class="modal-content">
 			<div class="modal-header">
@@ -919,27 +919,59 @@
 	
 	
 	$(document).ready(function() {
-		var optionFields = jQuery.parseJSON('{{ option_fields|safe }}');
-		console.log(optionFields);
-
+		var optionFields = jQuery.parseJSON(`{{ option_fields|safe }}`);
 		jQuery.each(optionFields, function(key, value) {
+			var match = $("#" + key);
 			if (value.length == 0) {
 				$("#add-custom-option").click();
 				$("#custom_option_" + (customFieldIdx - 1)).val(key);
+			} else if (value.length > 1 || match.attr("class") == null) {
+				for (var i = 0; i < value.length; i++) {
+					var fields = value[i].split(/\s+/);
+					var obvName = fields[0];
+					$("#" + obvName + "-vartype").val(key).change();
+					if (key == "loguniform_var" || key == "random_var" || key == "lognormrandom_var") {
+						if (fields.length > 1) {
+							$("#" + obvName + "-lower").val(fields[1]);
+							$("#" + obvName + "-lower").keyup();
+						}
+						if (fields.length > 2) {
+							$("#" + obvName + "-upper").val(fields[2]);
+							$("#" + obvName + "-upper").keyup();
+						}
+					} else if (key == "static_list_var") {
+						var tmp = "";
+						for (var j = 1; j < fields.length; j++) {
+							tmp += fields[j];
+						}
+						$("#" + obvName + "-lower").val(tmp);
+						$("#" + obvName + "-lower").keyup();
+					}
+				}
 			} else {
-				var match = $("#" + key);
-				switch (match.attr("class").split(/\s+/)[0]) {
+				try {
+					var classStr = match.attr("class").split(/\s+/)[0];
+				} catch(err) {
+					return true;
+				}
+				switch (classStr) {
 					case "normal":
-						console.log(key, value);
+						match.val(value[0]);
+						match.keyup();
 						break;
 					case "bool":
-						console.log(key, value);
+						if (value == "0") {
+							match.prop("checked", false);
+						} else {
+							match.prop("checked", true);
+						}
+						match.change();
 						break;
 					case "listbox":
-						console.log(key, value);
+						match.val(value);
+						match.click();
 						break;
 					case "free":
-						console.log(key, value);
 						break;
 				}
 			}
