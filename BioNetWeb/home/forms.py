@@ -22,7 +22,7 @@ class RegistrationForm(UserCreationForm):
     
 
     class Meta:
-        model = models.MyUser
+        model = models.User
         fields = (
             'email',
             'name',
