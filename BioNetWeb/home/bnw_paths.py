@@ -6,8 +6,6 @@ class Paths:
     output = "/scratch/bionetfit/bnw/"
     monsoon_ssh = "bionetfithead.cefns.nau.edu"
     
-    generation_plot_script = "/scratch/bionetfit/generation_plot.py"
-    bestfit_plot_script = "/scratch/bionetfit/bestfit_plot.py"
     make_csvs_script = "/scratch/bionetfit/make_csvs.py"
     bestfit_data = "bestfit.csv"
     best_data = "best_data.csv"
