@@ -18,6 +18,7 @@ urlpatterns = [
     url(r'^example_download_project*$', views.example_download, name='example_download'),
     url(r'^example_bestfit_plot*$', views.example_bestfit, name='example_bestfit'),
     url(r'^example_generational_plot*$', views.example_generation, name='example_generation'),
+    url(r'^example_fitvalue_plot*$', views.example_fitvalue, name='example_fitvalue'),
     url(r'^bestfit_plot*$', views.bestfit_plot, name='bestfit_plot'),
     url(r'^generational_plot*$', views.generational_plot, name='generational_plot'),
     url(r'^fitval_plot*$', views.fitval_plot, name='fitval_plot'),

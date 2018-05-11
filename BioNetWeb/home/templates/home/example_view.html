@@ -242,6 +242,7 @@
 					<ul class="dropdown-menu">
 						<li><div id="Bestfit" class="visualization btn-info nav-link">Bestfit</div></li>
 						<li><div id="Generational" class="visualization btn-info nav-link">Generational</div></li>
+						<li><div id="Fit-Value" class="visualization btn-info nav-link">Fit-Value</div></li>
 					</ul>
 				</div>
 				
@@ -301,6 +302,8 @@
 				var url = "/example_bestfit_plot?p=" + $("#projects").val();
 			} else if (visual_type == "Generational") {
 				var url = "/example_generational_plot?p=" + $("#projects").val();
+			} else if (visual_type == "Fit-Value") {
+				var url = "/example_fitvalue_plot?p=" + $("#projects").val();
 			} else {
 				return;
 			}

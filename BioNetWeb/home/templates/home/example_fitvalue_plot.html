@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+
+body { font: 12px Arial;}
+
+path { 
+	stroke-width: 2;
+	fill: none;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 1;
+	shape-rendering: crispEdges;
+
+}
+.slider {
+	width: 800px;
+}
+
+.legend rect {
+  fill:white;
+  stroke:black;
+  opacity:0.8;}
+  
+ .exp {
+	stroke-dasharray: 5,5;
+ }
+
+
+</style>
+
+<body>
+
+
+
+
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="https://d3js.org/d3-queue.v3.min.js"></script>
+
+<script>
+
+if (!String.prototype.format) {
+  String.prototype.format = function() {
+    var args = arguments;
+    return this.replace(/{(\d+)}/g, function(match, number) { 
+      return typeof args[number] != 'undefined'
+        ? args[number]
+        : match
+      ;
+    });
+  };
+}
+
+
+var margin = {top: 100, right: 60, bottom: 60, left: 60},
+    width = (650) - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scale.linear().range([0,width]);
+var y = d3.scale.linear().range([height,0]);
+
+var xAxis = d3.svg.axis()
+	.scale(x)
+	.orient("bottom");
+var yAxis = d3.svg.axis()
+	.scale(y)
+	.orient("left")
+	.tickFormat(d3.format(".1e"));
+		
+var chart1 = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+		.attr("transform",
+		"translate(" + margin.left + "," + margin.top + ")");
+		
+		
+chart1.append("text")
+	.attr("x", (width / 2))             
+	.attr("y", 0 - (margin.top / 2))
+	.attr("text-anchor", "middle")  
+	.style("font-size", "16px") 
+	.style("text-decoration", "underline")  
+	.text("Best Observables vs. Time");
+
+chart1.append("text")
+	.attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+	.attr("transform", "translate(-50," + height/2 + ")rotate(-90)")
+	.text("Fit Value");
+
+chart1.append("text")
+	.attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+	.attr("transform", "translate("+ (margin.top + width/3) +","+(height+40)+")")  // centre below axis
+	.text("Generation");
+
+
+var colors = d3.scale.category20();
+
+var best_data = "gen,name,val\n1,x,0.000000000000e+00\n1,y,2.155166207295e+00\n1,average,1.077583103648e+00\n10,x,0.000000000000e+00\n10,y,1.180865120348e+01\n10,average,5.904325601742e+00\n100,x,0.000000000000e+00\n100,y,0.000000000000e+00\n100,average,0.000000000000e+00\n11,x,0.000000000000e+00\n11,y,5.305746861321e+00\n11,average,2.652873430661e+00\n12,x,0.000000000000e+00\n12,y,5.185352908435e+00\n12,average,2.592676454217e+00\n13,x,0.000000000000e+00\n13,y,1.438400788557e+00\n13,average,7.192003942787e-01\n14,x,0.000000000000e+00\n14,y,2.868097717012e+00\n14,average,1.434048858506e+00\n15,x,0.000000000000e+00\n15,y,9.023452070291e+00\n15,average,4.511726035145e+00\n16,x,0.000000000000e+00\n16,y,9.128997750290e+00\n16,average,4.564498875145e+00\n17,x,0.000000000000e+00\n17,y,7.057426515841e+00\n17,average,3.528713257921e+00\n18,x,0.000000000000e+00\n18,y,4.243538184779e+00\n18,average,2.121769092389e+00\n19,x,0.000000000000e+00\n19,y,1.513705957459e+00\n19,average,7.568529787297e-01\n2,x,0.000000000000e+00\n2,y,2.155166207295e+00\n2,average,1.077583103648e+00\n20,x,0.000000000000e+00\n20,y,1.070780180194e+00\n20,average,5.353900900968e-01\n21,x,0.000000000000e+00\n21,y,8.860954414817e+00\n21,average,4.430477207408e+00\n22,x,0.000000000000e+00\n22,y,9.706196005730e-01\n22,average,4.853098002865e-01\n23,x,0.000000000000e+00\n23,y,2.030668273785e+00\n23,average,1.015334136892e+00\n24,x,0.000000000000e+00\n24,y,1.953526516615e+00\n24,average,9.767632583075e-01\n25,x,0.000000000000e+00\n25,y,2.049901231458e+00\n25,average,1.024950615729e+00\n26,x,0.000000000000e+00\n26,y,2.873844622611e+00\n26,average,1.436922311305e+00\n27,x,0.000000000000e+00\n27,y,8.897785734099e-01\n27,average,4.448892867049e-01\n28,x,0.000000000000e+00\n28,y,6.556561437527e+00\n28,average,3.278280718764e+00\n29,x,0.000000000000e+00\n29,y,1.203624090252e+00\n29,average,6.018120451260e-01\n3,x,0.000000000000e+00\n3,y,2.152367195306e+00\n3,average,1.076183597653e+00\n30,x,0.000000000000e+00\n30,y,6.497498496400e+00\n30,average,3.248749248200e+00\n31,x,0.000000000000e+00\n31,y,6.707095788580e-01\n31,average,3.353547894290e-01\n32,x,0.000000000000e+00\n32,y,4.352445654791e+00\n32,average,2.176222827395e+00\n33,x,0.000000000000e+00\n33,y,1.260918526940e+00\n33,average,6.304592634699e-01\n34,x,0.000000000000e+00\n34,y,4.870528843624e+00\n34,average,2.435264421812e+00\n35,x,0.000000000000e+00\n35,y,1.951900226517e+00\n35,average,9.759501132587e-01\n36,x,0.000000000000e+00\n36,y,3.754561305175e+00\n36,average,1.877280652588e+00\n37,x,0.000000000000e+00\n37,y,8.429757955598e-01\n37,average,4.214878977799e-01\n38,x,0.000000000000e+00\n38,y,3.422811911543e+00\n38,average,1.711405955772e+00\n39,x,0.000000000000e+00\n39,y,3.305565405483e+00\n39,average,1.652782702741e+00\n4,y,1.346525060649e+00\n4,x,0.000000000000e+00\n4,average,6.732625303243e-01\n40,x,0.000000000000e+00\n40,y,3.806410554818e+00\n40,average,1.903205277409e+00\n41,x,0.000000000000e+00\n41,y,3.591079724371e+00\n41,average,1.795539862185e+00\n42,x,0.000000000000e+00\n42,y,2.327925462639e+00\n42,average,1.163962731319e+00\n43,x,0.000000000000e+00\n43,y,2.049473340350e+00\n43,average,1.024736670175e+00\n44,x,0.000000000000e+00\n44,y,2.897157718577e+00\n44,average,1.448578859289e+00\n45,x,0.000000000000e+00\n45,y,6.605577579798e-01\n45,average,3.302788789899e-01\n46,x,0.000000000000e+00\n46,y,2.822662446456e+00\n46,average,1.411331223228e+00\n47,x,0.000000000000e+00\n47,y,2.822662446456e+00\n47,average,1.411331223228e+00\n48,x,0.000000000000e+00\n48,y,9.610591268162e-01\n48,average,4.805295634081e-01\n49,x,0.000000000000e+00\n49,y,2.272956911311e-01\n49,average,1.136478455656e-01\n5,x,0.000000000000e+00\n5,y,2.054806213964e+00\n5,average,1.027403106982e+00\n50,x,0.000000000000e+00\n50,y,1.747818437780e-01\n50,average,8.739092188899e-02\n51,x,0.000000000000e+00\n51,y,1.649739519421e-01\n51,average,8.248697597105e-02\n52,x,0.000000000000e+00\n52,y,1.020927151562e+00\n52,average,5.104635757810e-01\n53,x,0.000000000000e+00\n53,y,9.654789486798e-01\n53,average,4.827394743399e-01\n54,x,0.000000000000e+00\n54,y,1.218630197552e+00\n54,average,6.093150987758e-01\n55,x,0.000000000000e+00\n55,y,2.422088518445e-01\n55,average,1.211044259222e-01\n56,x,0.000000000000e+00\n56,y,1.673514677056e+00\n56,average,8.367573385280e-01\n57,x,0.000000000000e+00\n57,y,1.654367531889e+00\n57,average,8.271837659445e-01\n58,x,0.000000000000e+00\n58,y,1.486481269623e+00\n58,average,7.432406348116e-01\n59,x,0.000000000000e+00\n59,y,6.592369100318e-01\n59,average,3.296184550159e-01\n6,x,0.000000000000e+00\n6,y,8.976003397893e-01\n6,average,4.488001698946e-01\n60,x,0.000000000000e+00\n60,y,8.425970225839e-01\n60,average,4.212985112920e-01\n61,x,0.000000000000e+00\n61,y,1.276458150818e+00\n61,average,6.382290754089e-01\n62,x,0.000000000000e+00\n62,y,6.272991824060e-01\n62,average,3.136495912030e-01\n63,x,0.000000000000e+00\n63,y,1.508550795439e-01\n63,average,7.542753977193e-02\n64,x,0.000000000000e+00\n64,y,8.262654481318e-02\n64,average,4.131327240659e-02\n65,x,0.000000000000e+00\n65,y,7.603802222739e-01\n65,average,3.801901111370e-01\n66,x,0.000000000000e+00\n66,y,8.134256631958e-01\n66,average,4.067128315979e-01\n67,x,0.000000000000e+00\n67,y,1.434351181154e-01\n67,average,7.171755905768e-02\n68,x,0.000000000000e+00\n68,y,7.641657642847e-01\n68,average,3.820828821423e-01\n69,x,0.000000000000e+00\n69,y,1.939957728494e-02\n69,average,9.699788642471e-03\n7,x,0.000000000000e+00\n7,y,1.085879350083e+01\n7,average,5.429396750415e+00\n70,x,0.000000000000e+00\n70,y,7.641657642847e-01\n70,average,3.820828821423e-01\n71,x,0.000000000000e+00\n71,y,7.085629129622e-02\n71,average,3.542814564811e-02\n72,x,0.000000000000e+00\n72,y,3.350950484631e-01\n72,average,1.675475242316e-01\n73,x,0.000000000000e+00\n73,y,2.961733260158e-02\n73,average,1.480866630079e-02\n74,x,0.000000000000e+00\n74,y,5.721027263059e-03\n74,average,2.860513631529e-03\n75,x,0.000000000000e+00\n75,y,4.324202906470e-03\n75,average,2.162101453235e-03\n76,x,0.000000000000e+00\n76,y,1.882348085694e-02\n76,average,9.411740428468e-03\n77,x,0.000000000000e+00\n77,y,1.140025239800e-02\n77,average,5.700126199002e-03\n78,x,0.000000000000e+00\n78,y,7.636917938046e-03\n78,average,3.818458969023e-03\n79,x,0.000000000000e+00\n79,y,5.417375523442e-03\n79,average,2.708687761721e-03\n8,x,0.000000000000e+00\n8,y,1.267955225447e+01\n8,average,6.339776127234e+00\n80,x,0.000000000000e+00\n80,y,1.771317404124e-03\n80,average,8.856587020622e-04\n81,x,0.000000000000e+00\n81,y,7.194047772690e-04\n81,average,3.597023886345e-04\n82,x,0.000000000000e+00\n82,y,6.897211158491e-04\n82,average,3.448605579245e-04\n83,x,0.000000000000e+00\n83,y,3.809396239712e-04\n83,average,1.904698119856e-04\n84,x,0.000000000000e+00\n84,y,1.771317404124e-03\n84,average,8.856587020622e-04\n85,x,0.000000000000e+00\n85,y,1.756487942758e-03\n85,average,8.782439713791e-04\n86,x,0.000000000000e+00\n86,y,1.771317404124e-03\n86,average,8.856587020622e-04\n87,x,0.000000000000e+00\n87,y,6.171564294956e-05\n87,average,3.085782147478e-05\n88,x,0.000000000000e+00\n88,y,1.006497232435e-03\n88,average,5.032486162177e-04\n89,y,1.787997063453e-04\n89,x,0.000000000000e+00\n89,average,8.939985317265e-05\n9,x,0.000000000000e+00\n9,y,1.205974581811e+01\n9,average,6.029872909057e+00\n90,x,0.000000000000e+00\n90,y,3.733224634917e-04\n90,average,1.866612317459e-04\n91,x,0.000000000000e+00\n91,y,2.344934096215e-04\n91,average,1.172467048107e-04\n92,x,0.000000000000e+00\n92,y,9.932664862581e-04\n92,average,4.966332431290e-04\n93,x,0.000000000000e+00\n93,y,8.306460959882e-04\n93,average,4.153230479941e-04\n94,y,4.856426721527e-04\n94,x,0.000000000000e+00\n94,average,2.428213360763e-04\n95,x,0.000000000000e+00\n95,y,0.000000000000e+00\n95,average,0.000000000000e+00\n96,x,0.000000000000e+00\n96,y,0.000000000000e+00\n96,average,0.000000000000e+00\n97,x,0.000000000000e+00\n97,y,0.000000000000e+00\n97,average,0.000000000000e+00\n98,x,0.000000000000e+00\n98,y,0.000000000000e+00\n98,average,0.000000000000e+00\n99,x,0.000000000000e+00\n99,y,0.000000000000e+00\n99,average,0.000000000000e+00\n";
+var avg_data = "gen,name,val\n24,y,8.08948256057\n24,x,1.01544514615e-21\n24,average,4.04474128028\n25,y,5.2928149045\n25,x,1.01544514615e-21\n25,average,2.64640745225\n26,y,10.2716657227\n26,x,1.01544514615e-21\n26,average,5.13583286134\n27,y,6.25504472905\n27,x,1.01544514615e-21\n27,average,3.12752236452\n20,y,8.00335544328\n20,x,1.01544514615e-21\n20,average,4.00167772164\n21,y,11.173136889\n21,x,1.01544514615e-21\n21,average,5.58656844449\n22,y,7.41580026593\n22,x,1.01544514615e-21\n22,average,3.70790013297\n23,y,8.96269462037\n23,x,1.01544514615e-21\n23,average,4.48134731019\n28,y,7.8112638922\n28,x,1.01544514615e-21\n28,average,3.9056319461\n29,y,7.66636298364\n29,x,1.01544514615e-21\n29,average,3.83318149182\n4,y,1.3465250605\n4,x,1.01544514615e-21\n4,average,0.673262530252\n8,y,14.7045814352\n8,x,1.01544514615e-21\n8,average,7.35229071758\n59,y,1.3490849176\n59,x,1.01544514615e-21\n59,average,0.674542458798\n58,y,2.02338965917\n58,x,1.01544514615e-21\n58,average,1.01169482959\n55,y,1.94027405705\n55,x,1.01544514615e-21\n55,average,0.970137028525\n54,y,1.84112154993\n54,x,1.01544514615e-21\n54,average,0.920560774964\n57,y,2.35285283343\n57,x,1.01544514615e-21\n57,average,1.17642641672\n56,y,2.01252656653\n56,x,1.01544514615e-21\n56,average,1.00626328327\n51,y,1.03157477705\n51,x,1.01544514615e-21\n51,average,0.515787388527\n50,y,1.82865708476\n50,x,1.01544514615e-21\n50,average,0.914328542379\n53,y,1.84918511713\n53,x,1.01544514615e-21\n53,average,0.924592558565\n52,y,2.46971769636\n52,x,1.01544514615e-21\n52,average,1.23485884818\n88,y,0.056216839915\n88,x,1.01544514615e-21\n88,average,0.0281084199575\n89,y,0.000178799706981\n89,x,1.01544514615e-21\n89,average,8.93998534905e-05\n82,y,0.00802946702732\n82,x,1.01544514615e-21\n82,average,0.00401473351366\n83,y,0.000495398564737\n83,x,1.01544514615e-21\n83,average,0.000247699282368\n80,y,0.0177532908397\n80,x,1.01544514615e-21\n80,average,0.00887664541983\n81,y,0.00408972262678\n81,x,1.01544514615e-21\n81,average,0.00204486131339\n86,y,0.00190786520405\n86,x,1.01544514615e-21\n86,average,0.000953932602025\n87,y,0.0200623260965\n87,x,1.01544514615e-21\n87,average,0.0100311630482\n84,y,0.0198554003058\n84,x,1.01544514615e-21\n84,average,0.00992770015289\n85,y,0.0100090565947\n85,x,1.01544514615e-21\n85,average,0.00500452829733\n3,y,2.81732032279\n3,x,1.01544514615e-21\n3,average,1.40866016139\n7,y,12.6769803358\n7,x,1.01544514615e-21\n7,average,6.33849016792\n100,y,0.00270384527882\n100,x,1.01544514615e-21\n100,average,0.00135192263941\n39,y,4.03771344136\n39,x,1.01544514615e-21\n39,average,2.01885672068\n38,y,4.67394952397\n38,x,1.01544514615e-21\n38,average,2.33697476199\n33,y,4.76249690477\n33,x,1.01544514615e-21\n33,average,2.38124845239\n32,y,6.09797782622\n32,x,1.01544514615e-21\n32,average,3.04898891311\n31,y,5.40819554569\n31,x,1.01544514615e-21\n31,average,2.70409777284\n30,y,7.23298542528\n30,x,1.01544514615e-21\n30,average,3.61649271264\n37,y,3.25750479499\n37,x,1.01544514615e-21\n37,average,1.62875239749\n36,y,5.05044843855\n36,x,1.01544514615e-21\n36,average,2.52522421928\n35,y,4.99067020392\n35,x,1.01544514615e-21\n35,average,2.49533510196\n34,y,6.18005103812\n34,x,1.01544514615e-21\n34,average,3.09002551906\n60,y,1.40396404554\n60,x,1.01544514615e-21\n60,average,0.70198202277\n61,y,2.06815435713\n61,x,1.01544514615e-21\n61,average,1.03407717857\n62,y,1.31996214978\n62,x,1.01544514615e-21\n62,average,0.659981074892\n63,y,1.57092029834\n63,x,1.01544514615e-21\n63,average,0.78546014917\n64,y,1.13369462556\n64,x,1.01544514615e-21\n64,average,0.56684731278\n65,y,1.69711512309\n65,x,1.01544514615e-21\n65,average,0.848557561547\n66,y,1.22362033961\n66,x,1.01544514615e-21\n66,average,0.611810169804\n67,y,0.716158132171\n67,x,1.01544514615e-21\n67,average,0.358079066085\n68,y,1.15303860858\n68,x,1.01544514615e-21\n68,average,0.57651930429\n69,y,0.614710247655\n69,x,1.01544514615e-21\n69,average,0.307355123827\n2,y,4.69782398028\n2,x,1.01544514615e-21\n2,average,2.34891199014\n6,y,6.39360622857\n6,x,1.01544514615e-21\n6,average,3.19680311428\n99,y,0.00468067467943\n99,x,1.01544514615e-21\n99,average,0.00234033733971\n98,y,0.00127330350362\n98,x,1.01544514615e-21\n98,average,0.00063665175181\n91,y,0.00230476456434\n91,x,1.01544514615e-21\n91,average,0.00115238228217\n90,y,0.00192489463735\n90,x,1.01544514615e-21\n90,average,0.000962447318675\n93,y,0.00664199668541\n93,x,1.01544514615e-21\n93,average,0.00332099834271\n92,y,0.023724275815\n92,x,1.01544514615e-21\n92,average,0.0118621379075\n95,y,0.01121778841\n95,x,1.01544514615e-21\n95,average,0.00560889420498\n94,y,0.000485642673089\n94,x,1.01544514615e-21\n94,average,0.000242821336544\n97,y,0.0275379121961\n97,x,1.01544514615e-21\n97,average,0.0137689560981\n96,y,2.41784432545e-06\n96,x,1.01544514615e-21\n96,average,1.20892216272e-06\n11,y,10.986218071\n11,x,1.01544514615e-21\n11,average,5.49310903551\n10,y,12.49596163\n10,x,1.01544514615e-21\n10,average,6.24798081502\n13,y,9.0125527109\n13,x,1.01544514615e-21\n13,average,4.50627635545\n12,y,10.8253940957\n12,x,1.01544514615e-21\n12,average,5.41269704784\n15,y,10.0258976435\n15,x,1.01544514615e-21\n15,average,5.01294882177\n14,y,9.58699437193\n14,x,1.01544514615e-21\n14,average,4.79349718597\n17,y,11.4960725452\n17,x,1.01544514615e-21\n17,average,5.7480362726\n16,y,11.9881920794\n16,x,1.01544514615e-21\n16,average,5.99409603969\n19,y,8.33218626789\n19,x,1.01544514615e-21\n19,average,4.16609313395\n18,y,9.86904376999\n18,x,1.01544514615e-21\n18,average,4.934521885\n48,y,2.62796870632\n48,x,1.01544514615e-21\n48,average,1.31398435316\n49,y,2.10024095227\n49,x,1.01544514615e-21\n49,average,1.05012047613\n46,y,4.04885891141\n46,x,1.01544514615e-21\n46,average,2.0244294557\n47,y,3.60080605719\n47,x,1.01544514615e-21\n47,average,1.80040302859\n44,y,3.57980218486\n44,x,1.01544514615e-21\n44,average,1.78990109243\n45,y,3.15266786426\n45,x,1.01544514615e-21\n45,average,1.57633393213\n42,y,4.07173020526\n42,x,1.01544514615e-21\n42,average,2.03586510263\n43,y,3.17270330805\n43,x,1.01544514615e-21\n43,average,1.58635165402\n40,y,4.14933521759\n40,x,1.01544514615e-21\n40,average,2.0746676088\n41,y,3.99338623347\n41,x,1.01544514615e-21\n41,average,1.99669311673\n1,y,5.23816791223\n1,x,1.01544514615e-21\n1,average,2.61908395612\n5,y,5.46930024535\n5,x,1.01544514615e-21\n5,average,2.73465012268\n9,y,12.7631594724\n9,x,1.01544514615e-21\n9,average,6.38157973622\n77,y,0.0116216609553\n77,x,1.01544514615e-21\n77,average,0.00581083047766\n76,y,0.0601208578755\n76,x,1.01544514615e-21\n76,average,0.0300604289378\n75,y,0.0133350397041\n75,x,1.01544514615e-21\n75,average,0.00666751985206\n74,y,0.0665292485829\n74,x,1.01544514615e-21\n74,average,0.0332646242914\n73,y,0.373304201513\n73,x,1.01544514615e-21\n73,average,0.186652100757\n72,y,0.758173591592\n72,x,1.01544514615e-21\n72,average,0.379086795796\n71,y,0.540582941174\n71,x,1.01544514615e-21\n71,average,0.270291470587\n70,y,1.08103996795\n70,x,1.01544514615e-21\n70,average,0.540519983977\n79,y,0.0299933198662\n79,x,1.01544514615e-21\n79,average,0.0149966599331\n78,y,0.0536981905525\n78,x,1.01544514615e-21\n78,average,0.0268490952763\n";
+
+function updateGraph() {
+	var listBox = document.getElementById("type");
+	var type = listBox.options[listBox.selectedIndex].value;
+
+	if (type == "best_data") {
+		var data = d3.csv.parse(best_data);
+	} else {
+		var data = d3.csv.parse(avg_data);
+	}
+	makeGraphs("", data);
+}
+
+function makeGraphs(error, best_data) {
+	if (error) {
+	} else {
+		drawLines(best_data, chart1);
+	}
+}
+
+function drawLines(perm_data, chart) {
+	var paths = chart.selectAll(".obv").remove();
+	var axes = chart.selectAll(".axis").remove();
+	
+	var cbs = document.getElementsByClassName("cb");
+	
+	var names = [];
+	for (var i = 0; i < cbs.length; i++) {
+		if (cbs[i].checked) {
+			names.push(cbs[i].id);
+		}
+	}
+	// Coerce data to integers/floats
+	perm_data.forEach(function(d) {
+		d.val = Number(d.val);
+		d.gen = +d.gen;
+	});
+	
+	var allData = [];
+	var dataset = {};
+	
+	perm_data.forEach(function(d) {
+
+		if (names.includes(d.name)) {
+			allData.push(d);
+			
+				if (d.name in dataset) {
+					dataset[d.name].push(d);
+				} else {
+					dataset[d.name] = [d];
+				}
+					
+		}		
+	});
+
+	for (var name in dataset) {
+		dataset[name].sort(function(a, b) { return a.gen - b.gen } );
+	}
+	
+	var line = d3.svg.line()
+		.x(function(d) { return x(d.gen); })
+		.y(function(d) { return y(d.val); })
+		.interpolate("basis");
+		
+	x.domain(d3.extent(allData, function(d) { return d.gen; }));
+	y.domain(d3.extent(allData, function(d) { return d.val; }));
+	
+	// Draw permutation data
+	for (var name in dataset) {
+		chart.append("path")
+			.attr("class", "line obv-{0} obv".format(name))
+			.attr("stroke", colors(name))
+			.attr("data-legend", name)
+			.attr("d", line(dataset[name]));	
+	}
+
+	chart.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis);
+
+	// Add the Y Axis
+	chart.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+	
+	if (document.getElementsByClassName("legend").length == 0) {
+		legend = chart.append("g")
+			.attr("class", "legend")
+			.attr("transform","translate(0,-50)")
+			.style("font-size","12px")
+			.call(d3.legend);
+	}
+}
+
+function updateCB(obj) {
+	updateGraph();
+}
+
+window.onload = updateCB;
+</script>
+
+
+	<select id="type" onchange="updateGraph()">
+		<option value="best_data" selected>Best</option>
+		<option value="avg_data">Average</option>
+	</select>
+
+
+	<br>
+	
+	<input type="checkbox" id="x" class="cb" onchange="updateCB(this)" checked>x<br>
+	<input type="checkbox" id="y" class="cb" onchange="updateCB(this)" checked>y<br>
+	<input type="checkbox" id="average" class="cb" onchange="updateCB(this)" checked>average<br>
+
+
+
+	
+
+		
+	
+	
+</body>
+
+<script>
+// d3.legend.js 
+// (C) 2012 ziggy.jonsson.nyc@gmail.com
+// MIT licence
+
+(function() {
+d3.legend = function(g) {
+  g.each(function() {
+    var g= d3.select(this),
+        items = {},
+        svg = d3.select(g.property("nearestViewportElement")),
+        legendPadding = g.attr("data-style-padding") || 5,
+        lb = g.selectAll(".legend-box").data([true]),
+        li = g.selectAll(".legend-items").data([true])
+
+    lb.enter().append("rect").classed("legend-box",true)
+    li.enter().append("g").classed("legend-items",true)
+
+    svg.selectAll("[data-legend]").each(function() {
+        var self = d3.select(this)
+        items[self.attr("data-legend")] = {
+          pos : self.attr("data-legend-pos") || this.getBBox().y,
+          color : self.attr("data-legend-color") != undefined ? self.attr("data-legend-color") : self.style("fill") != 'none' ? self.style("fill") : self.style("stroke") 
+        }
+      })
+
+    items = d3.entries(items).sort(function(a,b) { return a.value.pos-b.value.pos})
+
+    
+    li.selectAll("text")
+        .data(items,function(d) { return d.key})
+        .call(function(d) { d.enter().append("text")})
+        .call(function(d) { d.exit().remove()})
+        .attr("y",function(d,i) { return i+"em"})
+        .attr("x","1em")
+        .text(function(d) { ;return d.key})
+    
+    li.selectAll("circle")
+        .data(items,function(d) { return d.key})
+        .call(function(d) { d.enter().append("circle")})
+        .call(function(d) { d.exit().remove()})
+        .attr("cy",function(d,i) { return i-0.25+"em"})
+        .attr("cx",0)
+        .attr("r","0.4em")
+        .style("fill",function(d) {return d.value.color})  
+    
+    // Reposition and resize the box
+    var lbbox = li[0][0].getBBox()  
+    lb.attr("x",(lbbox.x-legendPadding))
+        .attr("y",(lbbox.y-legendPadding))
+        .attr("height",(lbbox.height+2*legendPadding))
+        .attr("width",(lbbox.width+2*legendPadding))
+  })
+  return g
+}
+})()
+</script>
