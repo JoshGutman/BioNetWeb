@@ -25,7 +25,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = S_SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ["bionetfitweb.cefns.nau.edu", "localhost", "bionetfitweb"]
 
@@ -131,7 +131,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-ADMINS = (('Josh', 'jng86@nau.edu'),)
+ADMINS = (('Dr. Razi', 'Abolfazl.Razi@nau.edu'),)
 
 DEFAULT_FROM_EMAIL='webmaster@localhost' 
 SERVER_EMAIL='root@localhost' 
