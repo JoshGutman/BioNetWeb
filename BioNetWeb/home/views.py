@@ -45,6 +45,7 @@ def index(request):
                 conf = get_file(username, project_id, ['input_files', conf_file])
 
                 option_fields = {}
+
                 for line in conf.split('\n'):
                     if not line or line.startswith("#"):
                         continue
@@ -56,6 +57,11 @@ def index(request):
                             option_fields[fields[0]] = [fields[1].strip()]
                     else:
                         option_fields[line.strip()] = []
+
+                for field in option_fields:
+                    if field not in ["loguniform_var", "random_var", "lognormrandom_var", "static_list_var"]:
+                        if len(option_fields[field]) > 1:
+                            option_fields[field] = option_fields[field][:1]
                 
 
             else:
@@ -76,14 +82,14 @@ def index(request):
             warnings = []
             project_limit_reached = False
             if request.user.is_authenticated:
-                if not request.user.groups.filter(name="monsoon").exists():
+                #if not request.user.groups.filter(name="monsoon").exists():
+                if not request.user.can_use_monsoon:
                     warnings.append("Your account is not approved -- you will not be able to run BioNetFit on Monsoon.")
                 if get_num_projects(str(request.user)) >= limits.NUM_PROJECTS_LIMIT:
                     warnings.append("You have reached the maximum allowed number of projects -- you will not be able to run BioNetFit on Monsoon.")
                     project_limit_reached = True
             else:
                 warnings.append("You are not logged in -- you will not be able to run BioNetFit on Monsoon.")
-            print(json.dumps(option_fields))
             return render(request, 'config/create.html', {'observables': observables,
                                                           'bngl': bngl,
                                                           'exp': exp,
@@ -343,6 +349,9 @@ def example_bestfit(request):
 def example_generation(request):
     return render(request, "home/example_generation_plot.html", {"observables": ["x", "y"], "max_gen": 100})
 
+def example_fitvalue(request):
+    return render(request, "home/example_fitvalue_plot.html", {"observables": ["x", "y"]})
+
 def to_mongo_key(filename):
     return filename.replace(".", bnw_paths.Paths.delimiter)
 
@@ -420,7 +429,8 @@ def user(request):
         if not request.user.is_authenticated:
             return HttpResponse()
 
-        if not request.user.groups.filter(name="monsoon").exists():
+        #if not request.user.groups.filter(name="monsoon").exists():
+        if not request.user.can_use_monsoon:
             return HttpResponse()
 
 
@@ -493,7 +503,8 @@ def user(request):
             if not request.user.is_authenticated:
                 return HttpResponse()
 
-            if not request.user.groups.filter(name="monsoon").exists():
+            #if not request.user.groups.filter(name="monsoon").exists():
+            if not request.user.can_use_monsoon:
                 return HttpResponse()
 
             user = str(request.user)
@@ -903,22 +914,23 @@ def signup(request):
             user = authenticate(username=username, password=raw_password)
             name = form.cleaned_data.get('name')
             org = form.cleaned_data.get('organization')
-
             # Email admins about new user
             message = 'Email: {}\nName: {}\nOrganization: {}\n'.format(
                 username,
                 name,
                 org)
-            mail_admins(
-                'BioNetWeb New User',
-                message,
-                fail_silently=False
-            )
-            
+            try:
+                mail_admins(
+                    'BioNetWeb New User',
+                    message,
+                    fail_silently=False
+                )
+            except:
+                pass
             # Add user to MongoDB
             add_user(username)
             
-            return redirect('/')
+            return redirect('/login')
     else:
         form = forms.RegistrationForm()
     return render(request, 'registration/signup.html', {'form': form})
@@ -926,8 +938,7 @@ def signup(request):
 
 def get_project_archive(username, project_name):
     project_path = os.path.join(bnw_paths.Paths.output, username, project_name).replace("\\", "/")
-    output = os.path.join(bnw_paths.Paths.output, username, "{}.zip".format(project_name))
-    
+    output = os.path.join(project_path, "{}.zip".format(project_name)).replace("\\", "/")
     ssh = ssh_connection.ShellHandler(bnw_paths.Paths.monsoon_ssh, secret_login.UN, secret_login.PW)
     stdin, stdout, stderr = ssh.execute("pwd")
     stdin, stdout, stderr = ssh.execute("zip {} -q -r {}".format(output, project_path))
@@ -939,7 +950,7 @@ def get_project_archive(username, project_name):
     sftp = ssh.ssh.open_sftp()
     try:
         archive = io.BytesIO()
-        sftp.getfo("{}.zip".format(project_path), archive)
+        sftp.getfo(output, archive)
     except FileNotFoundError:
         ssh.__del__()
         return ""
